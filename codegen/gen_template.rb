@@ -2,8 +2,8 @@
 MAX_PARAM = 10
 
 HEADER = <<EOD
-// Following code is generated from gen_template.rb
-\#define ARG(i)  Type<P##i>::get(args[i])
+// This file is generated from gen_template.rb
+\#define ARG(mrb, i)  Type<P##i>::get(mrb, args[i])
 \#define CHECK(i)  {if(!Type<P##i>::check(args[i])) return RAISE(i);}
 \#define RAISE(i)  raise(mrb, i, Type<P##i>::TYPE_NAME, args[i])
 \#define CHECKNARG(narg)  {if(narg != NPARAM) RAISENARG(narg);}
@@ -117,7 +117,7 @@ def embed_template(str, nparam)
     asserts = ''
   else
     params = (0...nparam).map {|i| "P#{i}"}.join(', ')
-    args = (0...nparam).map {|i| "ARG(#{i})"}.join(', ')
+    args = (0...nparam).map {|i| "ARG(mrb, #{i})"}.join(', ')
     classes = (0...nparam).map {|i| "class P#{i}"}.join(', ')
     asserts = (0...nparam).map {|i| " CHECK(#{i});"}.join('')
   end

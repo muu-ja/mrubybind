@@ -17,6 +17,8 @@ const char Type<const std::string>::TYPE_NAME[] = "String";
 const char Type<const std::string&>::TYPE_NAME[] = "String";
 const char Type<bool>::TYPE_NAME[] = "Bool";
 const char Type<void*>::TYPE_NAME[] = "Voidp";
+const char Type<std::function<void()> >::TYPE_NAME[] = "Func";
+const char TypeFuncBase::TYPE_NAME[] = "Func";
 
 mrb_value raise(mrb_state *mrb, int parameter_index,
                 const char* required_type_name, mrb_value value) {

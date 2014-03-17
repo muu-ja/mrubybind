@@ -11,5 +11,8 @@ clean:
 	 cat mrubybind.1.h mrubybind_types.1.h && \
 	 ruby gen_template.rb && \
 	 cat mrubybind_types.3.h mrubybind.3.h) > $@
+	
+../mrubybind_types_generated.h:	gen_types_template.rb
+	ruby gen_types_template.rb > ../mrubybind_types_generated.h
 
 #
