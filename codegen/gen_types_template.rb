@@ -11,17 +11,35 @@ EOD
 
 TYPE_TMPL = <<EOD
 
-// callback (%PARAMS%)
-template<%CLASSES%>
-struct Type<std::function<void(%PARAMS%)> > : public TypeFuncBase {
+// callback R(%PARAMS%)
+template<class R, %CLASSES%>
+struct Type<sp_mrb_func<R(%PARAMS%)> > : public TypeFuncBase {
   static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
-  static std::function<void(%PARAMS%)> get(mrb_state* mrb, mrb_value v) {
-      return [=](%ARGS%){
-          mrb_value a[] = {%ARG_VALS%};
-          mrb_yield_argv(mrb, v, %NPARAM%, a);
-      };
+  static sp_mrb_func<R(%PARAMS%)> get(mrb_state* mrb, mrb_value v) {
+    Deleter<std::function<R(%PARAMS%)> > d = set_avoid_gc<std::function<R(%PARAMS%)> >(mrb, v);
+    return make_sp_mrb_func<R(%PARAMS%)>(d, [=](%ARGS%){
+      mrb_value a[] = {%ARG_VALS%};
+      return Type<R>::get(mrb, mrb_yield_argv(mrb, v, %NPARAM%, a));
+    });
   }
-  static mrb_value ret(mrb_state* mrb, std::function<void(%PARAMS%)> p) {
+  static mrb_value ret(mrb_state* mrb, sp_mrb_func<R(%PARAMS%)> p) {
+      // don't call.
+      (void)mrb; (void)p; return mrb_nil_value();
+  }
+};
+
+// callback void(%PARAMS%)
+template<%CLASSES%>
+struct Type<sp_mrb_func<void(%PARAMS%)> > : public TypeFuncBase {
+  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static sp_mrb_func<void(%PARAMS%)> get(mrb_state* mrb, mrb_value v) {
+    Deleter<std::function<void(%PARAMS%)> > d = set_avoid_gc<std::function<void(%PARAMS%)> >(mrb, v);
+    return make_sp_mrb_func<void(%PARAMS%)>(d, [=](%ARGS%){
+      mrb_value a[] = {%ARG_VALS%};
+      mrb_yield_argv(mrb, v, %NPARAM%, a);
+    });
+  }
+  static mrb_value ret(mrb_state* mrb, sp_mrb_func<void(%PARAMS%)> p) {
       // don't call.
       (void)mrb; (void)p; return mrb_nil_value();
   }

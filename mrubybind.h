@@ -988,11 +988,19 @@ public:
                 mod, binder, class_name_v, method_name_v, func_ptr_v, nparam_v);
   }
 
+  mrb_state* get_mrb(){
+      return mrb_;
+  }
+  mrb_value get_avoid_gc_table(){
+      return avoid_gc_table_;
+  }
+
 private:
   void Initialize();
 
   mrb_state* mrb_;
   mrb_value mod_mrubybind_;
+  mrb_value avoid_gc_table_;
   RClass* mod_;
   int arena_index_;
 };

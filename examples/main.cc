@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <functional>
 using namespace std;
 
@@ -107,24 +108,73 @@ void UseModuleTest(mrb_state* mrb) {
 //=============================================================================
 //
 
-static mrb_state* mrb_callback = NULL;
 
-std::string call_callback(std::function<void()> f) {
+std::string call_callback(mrubybind::sp_mrb_func<void()> f) {
   if(f)
   {
-      f();
+      cout << "pre f\n";
+      f.func()();
+      cout << "post f\n";
   }
-  //std::cout << "call call_callback\n";
   return "call_callback called\n";
 }
 
-std::string call_callback_a1(std::function<void(int a0)> f) {
+std::string call_callback_a1(mrubybind::sp_mrb_func<void(int a0)> f) {
   if(f)
   {
-      f(23);
+      f.func()(23);
   }
-  //std::cout << "call call_callback\n";
-  return "call_callback called\n";
+  return "call_callback_a1 called\n";
+}
+
+std::string call_callback_a2(mrubybind::sp_mrb_func<void(int a0, std::string a1)> f) {
+  if(f)
+  {
+      f.func()(23, "string");
+  }
+  return "call_callback_a2 called\n";
+}
+
+std::string call_callback_a1_int(mrubybind::sp_mrb_func<int(int a0)> f) {
+  std::stringstream s;
+  s << "call_callback_a1_int return this ->" << f.func()(23);
+  return  s.str();
+}
+
+mrubybind::sp_mrb_func<void()> old_f;
+
+void set_old_f(mrubybind::sp_mrb_func<void()> f) {
+  old_f = f;
+}
+
+void call_old_f() {
+  old_f.func()();
+}
+
+
+class Callbacker
+{
+    int a;
+public:
+    Callbacker()
+    {
+        a = 5;
+    }
+
+    int func_test(mrubybind::sp_mrb_func<void(int a0)> f)
+    {
+        f.func()(a);
+        return a;
+    }
+
+    std::string func_a2_string(mrubybind::sp_mrb_func<std::string(int a0, std::string a1)> f) {
+      return f.func()(48, "str");
+    }
+};
+
+Callbacker* new_callbacker()
+{
+    return new Callbacker();
 }
 
 void CallbackFunctionTest(mrb_state* mrb) {
@@ -132,19 +182,47 @@ void CallbackFunctionTest(mrb_state* mrb) {
     mrubybind::MrubyBind b(mrb);
     b.bind("call_callback", call_callback);
     b.bind("call_callback_a1", call_callback_a1);
+    b.bind("call_callback_a2", call_callback_a2);
+    b.bind("call_callback_a1_int", call_callback_a1_int);
+    b.bind("set_old_f", set_old_f);
+    b.bind("call_old_f", call_old_f);
+
+    b.bind_class("Callbacker", new_callbacker);
+    b.bind_instance_method("Callbacker", "func_test", &Callbacker::func_test);
+    b.bind_instance_method("Callbacker", "func_a2_string", &Callbacker::func_a2_string);
   }
 
-  mrb_callback = mrb;
-
   mrb_load_string(mrb,
-                  "puts call_callback(lambda do\n"
-                  "  puts \"??\"\n"
-                  "end)\n"
-                  "puts call_callback_a1(lambda do |a0|\n"
-                  "  puts \"a0 = #{a0.to_s}\"\n"
-                  "end)\n"
-                  "puts emphasize('Hello, mruby!')\n"
+                  "v = call_callback do\n"
+                  "  puts \"?? called\n\""
+                  "end\n"
+                  "puts v\n"
+                  "puts call_callback_a1 { |a0|\n"
+                  "  puts \"a0 = #{a0}\"\n"
+                  "}\n"
+                  "puts call_callback_a2 { |a0, a1|\n"
+                  "  puts \"a0 = #{a0}, a1 = #{a1}\"\n"
+                  "}\n"
+                  "puts call_callback_a1_int { |a0|\n"
+                  "  puts \"a0 = #{a0}\"\n"
+                  "}\n"
+                  "puts \"Callbacker.new.func_test \" + Callbacker.new.func_test {|a0|\n"
+                  "  puts \"class a0 = #{a0}\"\n"
+                  "}.to_s\n"
+                  "puts \"Callbacker.new.func_a2_string \" + Callbacker.new.func_a2_string {|a0, a1|\n"
+                  "  puts \"class a0 = #{a0}, a1 = #{a1}\"\n"
+                  "  \"cat #{a0} #{a1}\"\n"
+                  "}.to_s\n"
+                  "set_old_f do puts \"call old_f\"; end"
                   );
+  mrb_load_string(mrb,
+                  "GC.start\n"
+                  );
+  mrb_load_string(mrb,
+                  "puts \"later...\"\n"
+                  "call_old_f\n"
+                  );
+  old_f.reset();
   if (mrb->exc) {
     mrb_p(mrb, mrb_obj_value(mrb->exc));
   }

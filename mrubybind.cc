@@ -4,6 +4,7 @@
 #include "mruby/proc.h"
 #include "mruby/string.h"
 #include "mruby/variable.h"
+#include "mruby/hash.h"
 
 namespace mrubybind {
 
@@ -17,7 +18,6 @@ const char Type<const std::string>::TYPE_NAME[] = "String";
 const char Type<const std::string&>::TYPE_NAME[] = "String";
 const char Type<bool>::TYPE_NAME[] = "Bool";
 const char Type<void*>::TYPE_NAME[] = "Voidp";
-const char Type<std::function<void()> >::TYPE_NAME[] = "Func";
 const char TypeFuncBase::TYPE_NAME[] = "Func";
 
 mrb_value raise(mrb_state *mrb, int parameter_index,
@@ -82,5 +82,6 @@ void MrubyBind::BindInstanceMethod(
   struct RClass* klass = GetClass(class_name);
   mrb_define_method_raw(mrb_, klass, method_name_s, proc);
 }
+
 
 }  // namespace mrubybind

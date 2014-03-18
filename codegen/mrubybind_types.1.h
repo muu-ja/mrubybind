@@ -3,10 +3,95 @@
 #include "mruby/string.h"
 #include "mruby/proc.h"
 #include "mruby/array.h"
+#include "mruby/hash.h"
+#include "mruby/variable.h"
 #include <string>
 #include <functional>
+#include <memory>
 
 namespace mrubybind {
+
+template<class T> class Deleter{
+    mrb_state* mrb_;
+    mrb_value avoid_gc_table_;
+    mrb_value v_;
+public:
+    Deleter(mrb_state* mrb, mrb_value avoid_gc_table, mrb_value v){
+        mrb_ = mrb;
+        avoid_gc_table_ = avoid_gc_table;
+        v_ = v;
+    }
+    ~Deleter(){
+
+    }
+    void operator()(T* p) const {
+        mrb_hash_delete_key(mrb_, avoid_gc_table_, v_);
+        delete p;
+    }
+
+};
+
+template<class T> using sp_mrb_obj = std::shared_ptr<T>;
+//template<class T> using sp_mrb_func = std::shared_ptr<std::function<T> >;
+
+template<class T> class sp_mrb_func{
+    std::shared_ptr<std::function<T> > p;
+public:
+    sp_mrb_func(){
+
+    }
+    template<class D>sp_mrb_func(std::function<T>* pt, D d) : p(pt, d){
+
+    }
+    ~sp_mrb_func(){
+
+    }
+    std::shared_ptr<std::function<T> >& ref(){
+        return p;
+    }
+    std::function<T>& func(){
+        return *p.get();
+    }
+    operator bool() {
+        if(!p.get()){
+            return false;
+        }
+        return (bool)*p.get();
+    }
+    void reset(){
+        p.reset();
+    }
+    template<class Y> void reset(Y* y){
+        p.reset(y);
+    }
+    template<class Y, class D> void reset(Y* y, D d){
+        p.reset(y, d);
+    }
+    template<class Y, class D, class A> void reset(Y* y, D d, A a){
+        p.reset(y, d, a);
+    }
+};
+
+template<class T> Deleter<T> set_avoid_gc(mrb_state* mrb, mrb_value v){
+    RClass* mrubybind = mrb_define_module(mrb, "MrubyBind");
+    mrb_value avoid_gc_table = mrb_obj_iv_get(mrb, (RObject*)mrubybind,
+                                         mrb_intern_cstr(mrb, "__ untouchable __"));
+    mrb_hash_set(mrb, avoid_gc_table, v, v);
+    return Deleter<T>(mrb, avoid_gc_table, v);
+}
+
+template<class T> sp_mrb_obj<T> make_sp_mrb_obj(Deleter<T> d, T t){
+    T* pt = new T();
+    *pt = t;
+    return sp_mrb_obj<T>(pt, d);
+}
+
+template<class T> sp_mrb_func<T> make_sp_mrb_func(Deleter<std::function<T> > d, std::function<T> t){
+    std::function<T>* pt = new std::function<T>();
+    *pt = t;
+    return sp_mrb_func<T>(pt, d);
+}
+
 
 //===========================================================================
 // C <-> mruby type converter.
@@ -120,22 +205,41 @@ struct Type<void*> {
 };
 
 // Function
-template<>
-struct Type<std::function<void()> > {
-  static const char TYPE_NAME[];
+struct TypeFuncBase{
+    static const char TYPE_NAME[];
+};
+
+template<class R>
+struct Type<sp_mrb_func<R()> > :public TypeFuncBase {
   static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
-  static std::function<void()> get(mrb_state* mrb, mrb_value v) { return [=](){
-      mrb_yield(mrb, v, mrb_nil_value());
-  }; }
-  static mrb_value ret(mrb_state* mrb, std::function<void()> p) {
+  static sp_mrb_func<R()> get(mrb_state* mrb, mrb_value v) {
+      Deleter<std::function<R()> > d = set_avoid_gc<std::function<R()> >(mrb, v);
+      return make_sp_mrb_func<R()>(d, [=](){
+          return Type<R>::get(mrb, mrb_yield(mrb, v, mrb_nil_value()));
+      });
+  }
+  static mrb_value ret(mrb_state* mrb, sp_mrb_func<R()> p) {
       // don't call.
       (void)mrb; (void)p; return mrb_nil_value();
   }
 };
 
-struct TypeFuncBase{
-    static const char TYPE_NAME[];
+template<>
+struct Type<sp_mrb_func<void()> > :public TypeFuncBase {
+  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static sp_mrb_func<void()> get(mrb_state* mrb, mrb_value v) {
+      Deleter<std::function<void()> > d = set_avoid_gc<std::function<void()> >(mrb, v);
+      return make_sp_mrb_func<void()>(d, [=](){
+          mrb_yield(mrb, v, mrb_nil_value());
+      });
+  }
+  static mrb_value ret(mrb_state* mrb, sp_mrb_func<void()> p) {
+      // don't call.
+      (void)mrb; (void)p; return mrb_nil_value();
+  }
 };
+
+
 
 #include "mrubybind_types_generated.h"
 
