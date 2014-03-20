@@ -135,6 +135,35 @@ using C++ template partial specialization.
 
 See [mrubybind.h](https://github.com/ktaobo/mrubybind/blob/master/mrubybind.h).
 
+                            
+
+### Call block from C++ code
+
+1. define C++ function having callback function
+
+        std::string call_block(mrubybind::sp_mrb_func<void(int a0)> f) {
+          if(f)
+          {
+              f.func()(23);
+          }
+          return "called\n";
+        }
+
+2. Bind it using mrubybind:
+
+        #include "mrubybind.h"
+        
+        void install_square_function(mrb_state* mrb) {
+          mrubybind::MrubyBind b(mrb);
+          b.bind("call_block", call_block);
+        }
+        
+3. Call it from mruby:
+
+        puts call_block { |a0|
+          puts "a0 = #{a0}"
+        }
+
 # License
 
 MIT license.
