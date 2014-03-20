@@ -222,11 +222,69 @@ void CallbackFunctionTest(mrb_state* mrb) {
                   "puts \"later...\"\n"
                   "call_old_f\n"
                   );
-  old_f.reset();
   if (mrb->exc) {
     mrb_p(mrb, mrb_obj_value(mrb->exc));
   }
 }
+
+//=============================================================================
+//
+
+class ClassValue{
+public:
+    int a;
+    
+    ClassValue(){
+        std::cout << "ClassValue construct.\n";
+        std::cout.flush();
+        a = 7;
+    }
+    
+    ~ClassValue(){
+        std::cout << "ClassValue destruct.\n";
+        std::cout.flush();
+    }
+};
+
+std::shared_ptr<ClassValue> create_class_value()
+{
+    return std::shared_ptr<ClassValue>(new ClassValue());
+    //return ClassValue();
+}
+
+void class_value_increment(std::shared_ptr<ClassValue> cv)
+{
+    cv->a++;
+}
+
+int class_value_get_a(std::shared_ptr<ClassValue> cv)
+{
+    return cv->a;
+}
+
+void ClassPointerTest(mrb_state* mrb){
+    {
+        mrubybind::MrubyBind b(mrb);
+        b.bind("create_class_value", create_class_value);
+        b.bind_class<std::shared_ptr<ClassValue> >("ClassValue");
+        b.bind("class_value_increment", class_value_increment);
+        b.bind("class_value_get_a", class_value_get_a);
+    }
+    
+    mrb_load_string(mrb,
+                    "puts \"start ClassPointerTest\"\n"
+                    "cv = create_class_value\n"
+                    "puts \"cv -> #{class_value_get_a(cv)}\"\n"
+                    "class_value_increment(cv)\n"
+                    "puts \"cv -> #{class_value_get_a cv}\"\n"
+                    "cv = nil\n"
+                    "GC.start\n"
+                    );
+    if (mrb->exc) {
+        mrb_p(mrb, mrb_obj_value(mrb->exc));
+    }
+}
+
 
 //=============================================================================
 int main() {
@@ -236,6 +294,7 @@ int main() {
   BindClassTest(mrb);
   UseModuleTest(mrb);
   CallbackFunctionTest(mrb);
+  ClassPointerTest(mrb);
 
   mrb_close(mrb);
   return 0;

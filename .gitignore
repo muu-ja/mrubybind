@@ -9,3 +9,7 @@
 /test/module
 /test/wrong_type
 /test/wrong_arg_num
+
+a.out
+*.exe
+

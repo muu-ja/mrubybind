@@ -8,24 +8,109 @@
 #include <string>
 #include <functional>
 #include <memory>
+#include <map>
 
 namespace mrubybind {
 
+extern const char* untouchable_table;
+extern const char* untouchable_object;
+
+class MrubyBindStatus{
+
+public:
+
+    struct Data;
+    typedef std::shared_ptr<Data> Data_ptr;
+    typedef std::map<mrb_state*, Data_ptr > Table;
+    
+    static Table& get_living_table(){
+        static Table table;
+        return table;
+    }
+
+    struct Data{
+        mrb_state* mrb;
+        mrb_value avoid_gc_table;
+        
+        Data(){
+            
+        }
+        ~Data(){
+            
+        }
+        
+        mrb_state* get_mrb(){
+            return mrb;
+        }
+        
+        mrb_value get_avoid_gc_table(){
+            return avoid_gc_table;
+        }
+        
+    };
+    
+    MrubyBindStatus(){
+        
+    }
+
+    MrubyBindStatus(mrb_state* mrb, mrb_value avoid_gc_table){
+    
+        Table& living_table = get_living_table();
+        data = std::make_shared<Data>();
+        data->mrb = mrb;
+        data->avoid_gc_table = avoid_gc_table;
+        living_table[mrb] = data;
+    }
+    
+    ~MrubyBindStatus(){
+    
+        Table& living_table = MrubyBindStatus::get_living_table();
+        living_table.erase(data->mrb);
+        data->mrb = NULL;
+        
+    }
+    
+    static bool is_living(mrb_state* mrb){
+        Table& living_table = get_living_table();
+        if(living_table.find(mrb) != living_table.end()){
+            return living_table[mrb].get();
+        }
+        return false;
+    }
+    
+    static Data_ptr search(mrb_state* mrb){
+        Table& living_table = get_living_table();
+        if(living_table.find(mrb) != living_table.end()){
+            return living_table[mrb];
+        }
+        return Data_ptr(NULL);
+    }
+    
+    
+    
+private:
+    std::shared_ptr<Data> data;
+};
+
 template<class T> class Deleter{
-    mrb_state* mrb_;
-    mrb_value avoid_gc_table_;
+    MrubyBindStatus::Data_ptr mrbsp;
     mrb_value v_;
 public:
-    Deleter(mrb_state* mrb, mrb_value avoid_gc_table, mrb_value v){
-        mrb_ = mrb;
-        avoid_gc_table_ = avoid_gc_table;
+    Deleter(mrb_state* mrb, mrb_value v){
+        mrbsp = MrubyBindStatus::search(mrb);
+        mrb_value avoid_gc_table = mrbsp->get_avoid_gc_table();
+        mrb_hash_set(mrb, avoid_gc_table, v, v);
         v_ = v;
     }
     ~Deleter(){
 
     }
     void operator()(T* p) const {
-        mrb_hash_delete_key(mrb_, avoid_gc_table_, v_);
+        mrb_state* mrb = mrbsp->get_mrb();
+        if(mrb){
+            mrb_value avoid_gc_table = mrbsp->get_avoid_gc_table();
+            mrb_hash_delete_key(mrb, avoid_gc_table, v_);
+        }
         delete p;
     }
 
@@ -50,6 +135,9 @@ public:
         return p;
     }
     std::function<T>& func(){
+        if(!p.get()){
+            throw std::runtime_error("empty function.");
+        }
         return *p.get();
     }
     operator bool() {
@@ -73,11 +161,7 @@ public:
 };
 
 template<class T> Deleter<T> set_avoid_gc(mrb_state* mrb, mrb_value v){
-    RClass* mrubybind = mrb_define_module(mrb, "MrubyBind");
-    mrb_value avoid_gc_table = mrb_obj_iv_get(mrb, (RObject*)mrubybind,
-                                         mrb_intern_cstr(mrb, "__ untouchable __"));
-    mrb_hash_set(mrb, avoid_gc_table, v, v);
-    return Deleter<T>(mrb, avoid_gc_table, v);
+    return Deleter<T>(mrb, v);
 }
 
 template<class T> sp_mrb_obj<T> make_sp_mrb_obj(Deleter<T> d, T t){
@@ -92,12 +176,12 @@ template<class T> sp_mrb_func<T> make_sp_mrb_func(Deleter<std::function<T> > d, 
     return sp_mrb_func<T>(pt, d);
 }
 
-
 //===========================================================================
 // C <-> mruby type converter.
 
 // Base template class.
 template <class T>
+<<<<<<< HEAD
 struct Type {
   // Type name used for error message.
   // static const char TYPE_NAME[];
@@ -111,6 +195,14 @@ struct Type {
   // Converts type T value to mrb_value.
   //static mrb_value ret(mrb_state*, T i) = 0;
 };
+=======
+struct Type;
+//struct Type {
+  //static int check(mrb_value v) = 0;
+  //static int get(mrb_value v) = 0;
+  //static mrb_value ret(mrb_state*, int i) = 0;
+//};
+>>>>>>> managing class value.
 
 // Fixnum
 template<>
@@ -240,7 +332,6 @@ struct Type<sp_mrb_func<void()> > :public TypeFuncBase {
 };
 
 
-
 #include "mrubybind_types_generated.h"
 
 //===========================================================================
@@ -270,6 +361,35 @@ struct ClassBinder {
 template<class C>
 mrb_data_type ClassBinder<C>::type_info = { "???", dtor };
 
+// Other Class
+struct TypeClassBase{
+    static const char TYPE_NAME[];
+};
+
+template<class T> struct Type :public TypeClassBase {
+    static std::string class_name;
+    static int check(mrb_value v) { 
+        return mrb_type(v) == MRB_TT_DATA; 
+    }
+    static T get(mrb_state* mrb, mrb_value v) { 
+            (void)mrb; return *(T*)DATA_PTR(v); 
+        }
+    static mrb_value ret(mrb_state* mrb, T t) { 
+        RClass* cls;
+        mrb_value v;
+        cls = mrb_class_get(mrb, class_name.c_str());
+        v = mrb_class_new_instance(mrb, 0, NULL, cls);
+        DATA_TYPE(v) = &ClassBinder<T>::type_info;
+        T* nt = new T();
+        *nt = t;
+        DATA_PTR(v) = nt;
+        return v;
+    }
+};
+
+template<class T> std::string Type<T>::class_name = "";
+
+//
 mrb_value raise(mrb_state *mrb, int parameter_index,
                 const char* required_type_name, mrb_value value);
 mrb_value raisenarg(mrb_state *mrb, mrb_value func_name, int narg, int nparam);

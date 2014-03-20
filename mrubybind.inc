@@ -1,172 +1,3 @@
-<<<<<<< HEAD:mrubybind.h
-// Do not modify this file directly, this is generated
-/**
- * mrubybind - Binding library for mruby/C++
- *
- * Usage:
- *   1. Prepare a function which you want to call from mruby:
- *     > int square(int x)  { return x * x; }
- *
- *   2. Create MrubyBind instance:
- *     > MrubyBind b(mirb)
- *
- *   3. Bind a function:
- *     > b.bind("square", square);
- *
- *   4. You can call it from mruby:
- *     > puts square(1111)  #=> 1234321
- *
- *   There are other methods to bind constant/class/instance method in
- *   MrubyBind. Please see the definition of MrubyBind
- *   (the bottom of this file), or README.
- */
-#ifndef __MRUBYBIND_H__
-#define __MRUBYBIND_H__
-
-#ifndef __cplusplus
-#error mrubybind can be used from C++ only.
-#endif
-
-#include "mruby.h"
-#include "mruby/class.h"
-#include "mruby/data.h"
-//#include "mrubybind_types.h"
-#include "mruby/string.h"
-#include <string>
-
-#include <assert.h>
-#define ASSERT(expr)  assert(expr)
-
-namespace mrubybind {
-
-//===========================================================================
-// C <-> mruby type converter.
-
-template <class T>
-struct Type {
-  //static int check(mrb_value v) = 0;
-  //static int get(mrb_value v) = 0;
-  //static mrb_value ret(mrb_state*, int i) = 0;
-};
-
-// Fixnum
-template<>
-struct Type<int> {
-  static const char TYPE_NAME[];
-  static int check(mrb_value v) { return mrb_fixnum_p(v) || mrb_float_p(v); }
-  static int get(mrb_value v) { return mrb_fixnum_p(v) ? mrb_fixnum(v) : mrb_float(v); }
-  static mrb_value ret(mrb_state*, int i) { return mrb_fixnum_value(i); }
-};
-
-template<>
-struct Type<unsigned int> {
-  static const char TYPE_NAME[];
-  static int check(mrb_value v) { return mrb_fixnum_p(v) || mrb_float_p(v); }
-  static unsigned int get(mrb_value v) { return mrb_fixnum_p(v) ? mrb_fixnum(v) : mrb_float(v); }
-  static mrb_value ret(mrb_state*, unsigned int i) { return mrb_fixnum_value(i); }
-};
-
-// float
-template<>
-struct Type<float> {
-  static const char TYPE_NAME[];
-  static int check(mrb_value v) { return mrb_float_p(v) || mrb_fixnum_p(v); }
-  static float get(mrb_value v) { return mrb_float_p(v) ? mrb_float(v) : mrb_fixnum(v); }
-  static mrb_value ret(mrb_state* mrb, float f) { return mrb_float_value(mrb, f); }
-};
-
-// double
-template<>
-struct Type<double> {
-  static const char TYPE_NAME[];
-  static int check(mrb_value v) { return mrb_float_p(v) || mrb_fixnum_p(v); }
-  static double get(mrb_value v) { return mrb_float_p(v) ? mrb_float(v) : mrb_fixnum(v); }
-  static mrb_value ret(mrb_state* mrb, double f) { return mrb_float_value(mrb, f); }
-};
-
-// String
-template<>
-struct Type<const char*> {
-  static const char TYPE_NAME[];
-  static int check(mrb_value v) { return mrb_string_p(v); }
-  static const char* get(mrb_value v) { return RSTRING_PTR(v); }
-  static mrb_value ret(mrb_state* mrb, const char* s) { return mrb_str_new_cstr(mrb, s); }
-};
-
-template<>
-struct Type<std::string> {
-  static const char TYPE_NAME[];
-  static int check(mrb_value v) { return mrb_string_p(v); }
-  static const std::string get(mrb_value v) { return std::string(RSTRING_PTR(v), RSTRING_LEN(v)); }
-  static mrb_value ret(mrb_state* mrb, const std::string& s) { return mrb_str_new(mrb, s.c_str(), s.size()); }
-};
-
-template<>
-struct Type<const std::string> {
-  static const char TYPE_NAME[];
-  static int check(mrb_value v) { return mrb_string_p(v); }
-  static const std::string get(mrb_value v) { return std::string(RSTRING_PTR(v), RSTRING_LEN(v)); }
-  static mrb_value ret(mrb_state* mrb, const std::string& s) { return mrb_str_new(mrb, s.c_str(), s.size()); }
-};
-
-template<>
-struct Type<const std::string&> {
-  static const char TYPE_NAME[];
-  static int check(mrb_value v) { return mrb_string_p(v); }
-  static const std::string get(mrb_value v) { return std::string(RSTRING_PTR(v), RSTRING_LEN(v)); }
-  static mrb_value ret(mrb_state* mrb, const std::string& s) { return mrb_str_new(mrb, s.c_str(), s.size()); }
-};
-
-// Boolean
-template<>
-struct Type<bool> {
-  static const char TYPE_NAME[];
-  static int check(mrb_value /*v*/) { return 1; }
-  static bool get(mrb_value v) { return mrb_test(v); }
-  static mrb_value ret(mrb_state* /*mrb*/, bool b) { return b ? mrb_true_value() : mrb_false_value(); }
-};
-
-// Raw pointer
-template<>
-struct Type<void*> {
-  static const char TYPE_NAME[];
-  static int check(mrb_value v) { return mrb_voidp_p(v); }
-  static void* get(mrb_value v) { return mrb_voidp(v); }
-  static mrb_value ret(mrb_state* mrb, void* p) { return mrb_voidp_value(mrb, p); }
-};
-
-//===========================================================================
-// Binder
-
-// Template class for Binder.
-// Binder template class is specialized with type.
-template <class T>
-struct Binder {
-  // Template specialization.
-  //static mrb_value call(mrb_state* mrb, void* p, mrb_value* args, int narg) = 0;
-};
-
-// Template class for Binder.
-// Binder template class is specialized with type.
-template <class C>
-struct ClassBinder {
-  static struct mrb_data_type type_info;
-  static void dtor(mrb_state*, void* p) {
-    C* instance = static_cast<C*>(p);
-    delete instance;
-  }
-
-  // Template specialization.
-  //static void ctor(mrb_state* mrb, mrb_value self, void* new_func_ptr, mrb_value* args, int narg) {
-};
-template<class C>
-mrb_data_type ClassBinder<C>::type_info = { "???", dtor };
-
-mrb_value raise(mrb_state *mrb, int parameter_index,
-                const char* required_type_name, mrb_value value);
-
-// Includes generated template specialization.
-//#include "mrubybind.inc"
 // This file is generated from gen_template.rb
 #define ARG(mrb, i)  Type<P##i>::get(mrb, args[i])
 #define CHECK(i)  {if(!Type<P##i>::check(args[i])) return RAISE(i);}
@@ -204,9 +35,11 @@ struct ClassBinder<C* (*)(void)> {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     (void)(mrb);(void)(args);(void)(narg);
-    C* (*ctor)(void) = (C* (*)(void))new_func_ptr;
-    C* instance = ctor();
-    DATA_PTR(self) = instance;
+    if(new_func_ptr){
+        C* (*ctor)(void) = (C* (*)(void))new_func_ptr;
+        C* instance = ctor();
+        DATA_PTR(self) = instance;
+    }
     return self;
   }
 };
@@ -271,9 +104,11 @@ struct ClassBinder<C* (*)(P0)> {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     (void)(narg); CHECK(0);
-    C* (*ctor)(P0) = (C* (*)(P0))new_func_ptr;
-    C* instance = ctor(ARG(mrb, 0));
-    DATA_PTR(self) = instance;
+    if(new_func_ptr){
+        C* (*ctor)(P0) = (C* (*)(P0))new_func_ptr;
+        C* instance = ctor(ARG(mrb, 0));
+        DATA_PTR(self) = instance;
+    }
     return self;
   }
 };
@@ -338,9 +173,11 @@ struct ClassBinder<C* (*)(P0, P1)> {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     (void)(narg); CHECK(0); (void)(narg); CHECK(1);
-    C* (*ctor)(P0, P1) = (C* (*)(P0, P1))new_func_ptr;
-    C* instance = ctor(ARG(mrb, 0), ARG(mrb, 1));
-    DATA_PTR(self) = instance;
+    if(new_func_ptr){
+        C* (*ctor)(P0, P1) = (C* (*)(P0, P1))new_func_ptr;
+        C* instance = ctor(ARG(mrb, 0), ARG(mrb, 1));
+        DATA_PTR(self) = instance;
+    }
     return self;
   }
 };
@@ -405,9 +242,11 @@ struct ClassBinder<C* (*)(P0, P1, P2)> {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     (void)(narg); CHECK(0); (void)(narg); CHECK(1); (void)(narg); CHECK(2);
-    C* (*ctor)(P0, P1, P2) = (C* (*)(P0, P1, P2))new_func_ptr;
-    C* instance = ctor(ARG(mrb, 0), ARG(mrb, 1), ARG(mrb, 2));
-    DATA_PTR(self) = instance;
+    if(new_func_ptr){
+        C* (*ctor)(P0, P1, P2) = (C* (*)(P0, P1, P2))new_func_ptr;
+        C* instance = ctor(ARG(mrb, 0), ARG(mrb, 1), ARG(mrb, 2));
+        DATA_PTR(self) = instance;
+    }
     return self;
   }
 };
@@ -472,9 +311,11 @@ struct ClassBinder<C* (*)(P0, P1, P2, P3)> {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     (void)(narg); CHECK(0); (void)(narg); CHECK(1); (void)(narg); CHECK(2); (void)(narg); CHECK(3);
-    C* (*ctor)(P0, P1, P2, P3) = (C* (*)(P0, P1, P2, P3))new_func_ptr;
-    C* instance = ctor(ARG(mrb, 0), ARG(mrb, 1), ARG(mrb, 2), ARG(mrb, 3));
-    DATA_PTR(self) = instance;
+    if(new_func_ptr){
+        C* (*ctor)(P0, P1, P2, P3) = (C* (*)(P0, P1, P2, P3))new_func_ptr;
+        C* instance = ctor(ARG(mrb, 0), ARG(mrb, 1), ARG(mrb, 2), ARG(mrb, 3));
+        DATA_PTR(self) = instance;
+    }
     return self;
   }
 };
@@ -539,9 +380,11 @@ struct ClassBinder<C* (*)(P0, P1, P2, P3, P4)> {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     (void)(narg); CHECK(0); (void)(narg); CHECK(1); (void)(narg); CHECK(2); (void)(narg); CHECK(3); (void)(narg); CHECK(4);
-    C* (*ctor)(P0, P1, P2, P3, P4) = (C* (*)(P0, P1, P2, P3, P4))new_func_ptr;
-    C* instance = ctor(ARG(mrb, 0), ARG(mrb, 1), ARG(mrb, 2), ARG(mrb, 3), ARG(mrb, 4));
-    DATA_PTR(self) = instance;
+    if(new_func_ptr){
+        C* (*ctor)(P0, P1, P2, P3, P4) = (C* (*)(P0, P1, P2, P3, P4))new_func_ptr;
+        C* instance = ctor(ARG(mrb, 0), ARG(mrb, 1), ARG(mrb, 2), ARG(mrb, 3), ARG(mrb, 4));
+        DATA_PTR(self) = instance;
+    }
     return self;
   }
 };
@@ -606,9 +449,11 @@ struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5)> {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     (void)(narg); CHECK(0); (void)(narg); CHECK(1); (void)(narg); CHECK(2); (void)(narg); CHECK(3); (void)(narg); CHECK(4); (void)(narg); CHECK(5);
-    C* (*ctor)(P0, P1, P2, P3, P4, P5) = (C* (*)(P0, P1, P2, P3, P4, P5))new_func_ptr;
-    C* instance = ctor(ARG(mrb, 0), ARG(mrb, 1), ARG(mrb, 2), ARG(mrb, 3), ARG(mrb, 4), ARG(mrb, 5));
-    DATA_PTR(self) = instance;
+    if(new_func_ptr){
+        C* (*ctor)(P0, P1, P2, P3, P4, P5) = (C* (*)(P0, P1, P2, P3, P4, P5))new_func_ptr;
+        C* instance = ctor(ARG(mrb, 0), ARG(mrb, 1), ARG(mrb, 2), ARG(mrb, 3), ARG(mrb, 4), ARG(mrb, 5));
+        DATA_PTR(self) = instance;
+    }
     return self;
   }
 };
@@ -673,9 +518,11 @@ struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6)> {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     (void)(narg); CHECK(0); (void)(narg); CHECK(1); (void)(narg); CHECK(2); (void)(narg); CHECK(3); (void)(narg); CHECK(4); (void)(narg); CHECK(5); (void)(narg); CHECK(6);
-    C* (*ctor)(P0, P1, P2, P3, P4, P5, P6) = (C* (*)(P0, P1, P2, P3, P4, P5, P6))new_func_ptr;
-    C* instance = ctor(ARG(mrb, 0), ARG(mrb, 1), ARG(mrb, 2), ARG(mrb, 3), ARG(mrb, 4), ARG(mrb, 5), ARG(mrb, 6));
-    DATA_PTR(self) = instance;
+    if(new_func_ptr){
+        C* (*ctor)(P0, P1, P2, P3, P4, P5, P6) = (C* (*)(P0, P1, P2, P3, P4, P5, P6))new_func_ptr;
+        C* instance = ctor(ARG(mrb, 0), ARG(mrb, 1), ARG(mrb, 2), ARG(mrb, 3), ARG(mrb, 4), ARG(mrb, 5), ARG(mrb, 6));
+        DATA_PTR(self) = instance;
+    }
     return self;
   }
 };
@@ -740,9 +587,11 @@ struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6, P7)> {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     (void)(narg); CHECK(0); (void)(narg); CHECK(1); (void)(narg); CHECK(2); (void)(narg); CHECK(3); (void)(narg); CHECK(4); (void)(narg); CHECK(5); (void)(narg); CHECK(6); (void)(narg); CHECK(7);
-    C* (*ctor)(P0, P1, P2, P3, P4, P5, P6, P7) = (C* (*)(P0, P1, P2, P3, P4, P5, P6, P7))new_func_ptr;
-    C* instance = ctor(ARG(mrb, 0), ARG(mrb, 1), ARG(mrb, 2), ARG(mrb, 3), ARG(mrb, 4), ARG(mrb, 5), ARG(mrb, 6), ARG(mrb, 7));
-    DATA_PTR(self) = instance;
+    if(new_func_ptr){
+        C* (*ctor)(P0, P1, P2, P3, P4, P5, P6, P7) = (C* (*)(P0, P1, P2, P3, P4, P5, P6, P7))new_func_ptr;
+        C* instance = ctor(ARG(mrb, 0), ARG(mrb, 1), ARG(mrb, 2), ARG(mrb, 3), ARG(mrb, 4), ARG(mrb, 5), ARG(mrb, 6), ARG(mrb, 7));
+        DATA_PTR(self) = instance;
+    }
     return self;
   }
 };
@@ -807,9 +656,11 @@ struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8)> {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     (void)(narg); CHECK(0); (void)(narg); CHECK(1); (void)(narg); CHECK(2); (void)(narg); CHECK(3); (void)(narg); CHECK(4); (void)(narg); CHECK(5); (void)(narg); CHECK(6); (void)(narg); CHECK(7); (void)(narg); CHECK(8);
-    C* (*ctor)(P0, P1, P2, P3, P4, P5, P6, P7, P8) = (C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8))new_func_ptr;
-    C* instance = ctor(ARG(mrb, 0), ARG(mrb, 1), ARG(mrb, 2), ARG(mrb, 3), ARG(mrb, 4), ARG(mrb, 5), ARG(mrb, 6), ARG(mrb, 7), ARG(mrb, 8));
-    DATA_PTR(self) = instance;
+    if(new_func_ptr){
+        C* (*ctor)(P0, P1, P2, P3, P4, P5, P6, P7, P8) = (C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8))new_func_ptr;
+        C* instance = ctor(ARG(mrb, 0), ARG(mrb, 1), ARG(mrb, 2), ARG(mrb, 3), ARG(mrb, 4), ARG(mrb, 5), ARG(mrb, 6), ARG(mrb, 7), ARG(mrb, 8));
+        DATA_PTR(self) = instance;
+    }
     return self;
   }
 };
@@ -874,9 +725,11 @@ struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     (void)(narg); CHECK(0); (void)(narg); CHECK(1); (void)(narg); CHECK(2); (void)(narg); CHECK(3); (void)(narg); CHECK(4); (void)(narg); CHECK(5); (void)(narg); CHECK(6); (void)(narg); CHECK(7); (void)(narg); CHECK(8); (void)(narg); CHECK(9);
-    C* (*ctor)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9) = (C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9))new_func_ptr;
-    C* instance = ctor(ARG(mrb, 0), ARG(mrb, 1), ARG(mrb, 2), ARG(mrb, 3), ARG(mrb, 4), ARG(mrb, 5), ARG(mrb, 6), ARG(mrb, 7), ARG(mrb, 8), ARG(mrb, 9));
-    DATA_PTR(self) = instance;
+    if(new_func_ptr){
+        C* (*ctor)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9) = (C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9))new_func_ptr;
+        C* instance = ctor(ARG(mrb, 0), ARG(mrb, 1), ARG(mrb, 2), ARG(mrb, 3), ARG(mrb, 4), ARG(mrb, 5), ARG(mrb, 6), ARG(mrb, 7), ARG(mrb, 8), ARG(mrb, 9));
+        DATA_PTR(self) = instance;
+    }
     return self;
   }
 };
@@ -911,123 +764,3 @@ struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
 
 #undef ARG
 #undef CHECK
-
-}  // namespace mrubybind
-
-#undef ASSERT
-
-namespace mrubybind {
-
-//===========================================================================
-// MrubyBind - utility class for binding C functions/classes to mruby.
-class MrubyBind {
-public:
-  MrubyBind(mrb_state* mrb);
-  MrubyBind(mrb_state* mrb, RClass* mod);
-  ~MrubyBind();
-
-  // Bind constant value.
-  template <class T>
-  void bind_const(const char* name, T v) {
-    mrb_define_const(mrb_, mod_, name, Type<T>::ret(mrb_, v));
-  }
-
-  // Bind function.
-  template <class Func>
-  void bind(const char* func_name, Func func_ptr) {
-    mrb_value mod = mrb_obj_value(mod_);
-    mrb_value binder = mrb_voidp_value(mrb_, (void*)Binder<Func>::call);
-    mrb_value func_name_v = mrb_str_new_cstr(mrb_, func_name);
-    mrb_value func_ptr_v = mrb_voidp_value(mrb_, reinterpret_cast<void*>(func_ptr));
-    mrb_value nparam_v = mrb_fixnum_value(Binder<Func>::NPARAM);
-    mrb_funcall(mrb_, mod_mrubybind_, "define_function", 5, mod, binder, func_name_v,
-                func_ptr_v, nparam_v);
-  }
-
-  // Bind class.
-  template <class Func>
-  void bind_class(const char* class_name, Func new_func_ptr) {
-    struct RClass *tc = mrb_define_class(mrb_, class_name, mrb_->object_class);
-    MRB_SET_INSTANCE_TT(tc, MRB_TT_DATA);
-    mrb_value mod = mrb_obj_value(mod_);
-    mrb_value binder = mrb_voidp_value(mrb_, (void*)ClassBinder<Func>::ctor);
-    mrb_value class_name_v = mrb_str_new_cstr(mrb_, class_name);
-    mrb_value new_func_ptr_v = mrb_voidp_value(mrb_, (void*)new_func_ptr);
-    mrb_value nparam_v = mrb_fixnum_value(ClassBinder<Func>::NPARAM);
-    mrb_funcall(mrb_, mod_mrubybind_, "bind_class", 5, mod, binder,
-                class_name_v, new_func_ptr_v, nparam_v);
-  }
-  
-  // Bind class.(no new func)
-  template <class C>
-  void bind_class(const char* module_name, const char* class_name) {
-    struct RClass *tc = mrb_define_class(mrb_, class_name, mrb_->object_class);
-    MRB_SET_INSTANCE_TT(tc, MRB_TT_DATA);
-    mrb_value mod = mrb_obj_value(mod_);
-    if(module_name){
-        mod = mrb_obj_value(mrb_define_module(mrb_, module_name));
-    }
-    mrb_value binder = mrb_voidp_value(mrb_, (void*)ClassBinder<C*(*)(void)>::ctor);
-    mrb_value class_name_v = mrb_str_new_cstr(mrb_, class_name);
-    mrb_value new_func_ptr_v = mrb_nil_value();
-    mrb_value nparam_v = mrb_fixnum_value(0);
-    Type<C>::class_name = class_name;
-    mrb_funcall(mrb_, mod_mrubybind_, "bind_class", 5, mod, binder,
-                class_name_v, new_func_ptr_v, nparam_v);
-  }
-  
-  template <class C>
-  void bind_class(const char* class_name) {
-    bind_class<C>(NULL, class_name);
-  }
-
-  // Bind instance method.
-  template <class Method>
-  void bind_instance_method(const char* class_name, const char* method_name,
-                            Method method_ptr) {
-    mrb_value mod = mrb_obj_value(mod_);
-    mrb_value binder = mrb_voidp_value(mrb_, (void*)ClassBinder<Method>::call);
-    mrb_value class_name_v = mrb_str_new_cstr(mrb_, class_name);
-    mrb_value method_name_v = mrb_str_new_cstr(mrb_, method_name);
-    mrb_value method_pptr_v = mrb_str_new(mrb_,
-                                          reinterpret_cast<char*>(&method_ptr),
-                                          sizeof(method_ptr));
-    mrb_value nparam_v = mrb_fixnum_value(ClassBinder<Method>::NPARAM);
-    mrb_funcall(mrb_, mod_mrubybind_, "bind_instance_method", 6,
-                mod, binder, class_name_v, method_name_v, method_pptr_v, nparam_v);
-  }
-
-  // Bind static method.
-  template <class Method>
-  void bind_static_method(const char* class_name, const char* method_name,
-                          Method method_ptr) {
-    mrb_value mod = mrb_obj_value(mod_);
-    mrb_value binder = mrb_voidp_value(mrb_, (void*)Binder<Method>::call);
-    mrb_value class_name_v = mrb_str_new_cstr(mrb_, class_name);
-    mrb_value method_name_v = mrb_str_new_cstr(mrb_, method_name);
-    mrb_value func_ptr_v = mrb_voidp_value(mrb_, reinterpret_cast<void*>(method_ptr));
-    mrb_value nparam_v = mrb_fixnum_value(Binder<Method>::NPARAM);
-    mrb_funcall(mrb_, mod_mrubybind_, "bind_static_method", 6,
-                mod, binder, class_name_v, method_name_v, func_ptr_v, nparam_v);
-  }
-
-  mrb_state* get_mrb(){
-      return mrb_;
-  }
-  mrb_value get_avoid_gc_table(){
-      return avoid_gc_table_;
-  }
-
-private:
-  void Initialize();
-
-  mrb_state* mrb_;
-  mrb_value mod_mrubybind_;
-  mrb_value avoid_gc_table_;
-  RClass* mod_;
-  int arena_index_;
-};
-
-}  // namespace mrubybind
-
-#endif
