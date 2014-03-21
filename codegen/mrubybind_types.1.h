@@ -15,6 +15,23 @@ namespace mrubybind {
 extern const char* untouchable_table;
 extern const char* untouchable_object;
 
+class MrubyArenaStore{
+    mrb_state* mrb;
+    int ai;
+public:
+    MrubyArenaStore(mrb_state* mrb)
+    {
+        this->mrb = mrb;
+        this->ai = mrb_gc_arena_save(mrb);
+    }
+    
+    ~MrubyArenaStore()
+    {
+        mrb_gc_arena_restore(mrb, ai);
+    }
+
+};
+
 class MrubyBindStatus{
 
 public:
@@ -96,6 +113,11 @@ template<class T> class Deleter{
     MrubyBindStatus::Data_ptr mrbsp;
     mrb_value v_;
 public:
+    Deleter()
+    {
+        
+    }
+
     Deleter(mrb_state* mrb, mrb_value v){
         mrbsp = MrubyBindStatus::search(mrb);
         mrb_value avoid_gc_table = mrbsp->get_avoid_gc_table();
@@ -106,29 +128,33 @@ public:
 
     }
     void operator()(T* p) const {
-        mrb_state* mrb = mrbsp->get_mrb();
-        if(mrb){
-            mrb_value avoid_gc_table = mrbsp->get_avoid_gc_table();
-            mrb_hash_delete_key(mrb, avoid_gc_table, v_);
+        if(mrbsp.get()){
+            mrb_state* mrb = mrbsp->get_mrb();
+            if(mrb){
+                mrb_value avoid_gc_table = mrbsp->get_avoid_gc_table();
+                mrb_hash_delete_key(mrb, avoid_gc_table, v_);
+            }
         }
-        delete p;
+        if(p){
+            delete p;
+        }
     }
 
 };
 
-template<class T> using sp_mrb_obj = std::shared_ptr<T>;
-//template<class T> using sp_mrb_func = std::shared_ptr<std::function<T> >;
+template<class T> using obj_ptr = std::shared_ptr<T>;
+//template<class T> using func_ptr = std::shared_ptr<std::function<T> >;
 
-template<class T> class sp_mrb_func{
+template<class T> class func_ptr{
     std::shared_ptr<std::function<T> > p;
 public:
-    sp_mrb_func(){
+    func_ptr(){
 
     }
-    template<class D>sp_mrb_func(std::function<T>* pt, D d) : p(pt, d){
+    template<class D>func_ptr(std::function<T>* pt, D d) : p(pt, d){
 
     }
-    ~sp_mrb_func(){
+    ~func_ptr(){
 
     }
     std::shared_ptr<std::function<T> >& ref(){
@@ -164,24 +190,52 @@ template<class T> Deleter<T> set_avoid_gc(mrb_state* mrb, mrb_value v){
     return Deleter<T>(mrb, v);
 }
 
-template<class T> sp_mrb_obj<T> make_sp_mrb_obj(Deleter<T> d, T t){
+template<class T> obj_ptr<T> make_obj_ptr(Deleter<T> d, T t){
     T* pt = new T();
     *pt = t;
-    return sp_mrb_obj<T>(pt, d);
+    return obj_ptr<T>(pt, d);
 }
 
-template<class T> sp_mrb_func<T> make_sp_mrb_func(Deleter<std::function<T> > d, std::function<T> t){
+template<class T> func_ptr<T> make_func_ptr(Deleter<std::function<T> > d, std::function<T> t){
     std::function<T>* pt = new std::function<T>();
     *pt = t;
-    return sp_mrb_func<T>(pt, d);
+    return func_ptr<T>(pt, d);
 }
+
+template <class T>
+struct Type;
+
+class MrubyRef{
+    mrb_state* mrb;
+    std::shared_ptr<mrb_value> v;
+public:
+    
+    MrubyRef();
+    MrubyRef(mrb_state* mrb, const mrb_value& v);
+    ~MrubyRef();
+    
+    mrb_value get_v()const;
+    bool empty() const;
+    bool test() const;
+    bool obj_equal(const MrubyRef& r) const;
+    std::string to_s() const;
+    int to_i() const;
+    float to_float() const;
+    double to_double() const;
+    
+    MrubyRef call(std::string name){
+        MrubyArenaStore mas(mrb);
+        return MrubyRef(mrb, mrb_funcall(mrb, *(this->v.get()), name.c_str(), 0));
+    }
+    
+#include "mrubybind_call_generated.h"
+
+};
 
 //===========================================================================
 // C <-> mruby type converter.
 
-// Base template class.
 template <class T>
-<<<<<<< HEAD
 struct Type {
   // Type name used for error message.
   // static const char TYPE_NAME[];
@@ -195,14 +249,6 @@ struct Type {
   // Converts type T value to mrb_value.
   //static mrb_value ret(mrb_state*, T i) = 0;
 };
-=======
-struct Type;
-//struct Type {
-  //static int check(mrb_value v) = 0;
-  //static int get(mrb_value v) = 0;
-  //static mrb_value ret(mrb_state*, int i) = 0;
-//};
->>>>>>> managing class value.
 
 // Fixnum
 template<>
@@ -302,33 +348,46 @@ struct TypeFuncBase{
 };
 
 template<class R>
-struct Type<sp_mrb_func<R()> > :public TypeFuncBase {
+struct Type<func_ptr<R()> > :public TypeFuncBase {
   static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
-  static sp_mrb_func<R()> get(mrb_state* mrb, mrb_value v) {
+  static func_ptr<R()> get(mrb_state* mrb, mrb_value v) {
       Deleter<std::function<R()> > d = set_avoid_gc<std::function<R()> >(mrb, v);
-      return make_sp_mrb_func<R()>(d, [=](){
+      return make_func_ptr<R()>(d, [=](){
+          MrubyArenaStore mas(mrb);
           return Type<R>::get(mrb, mrb_yield(mrb, v, mrb_nil_value()));
       });
   }
-  static mrb_value ret(mrb_state* mrb, sp_mrb_func<R()> p) {
+  static mrb_value ret(mrb_state* mrb, func_ptr<R()> p) {
       // don't call.
+      throw std::runtime_error("don't call Type<func_ptr<R()> >::ret");
       (void)mrb; (void)p; return mrb_nil_value();
   }
 };
 
 template<>
-struct Type<sp_mrb_func<void()> > :public TypeFuncBase {
+struct Type<func_ptr<void()> > :public TypeFuncBase {
   static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
-  static sp_mrb_func<void()> get(mrb_state* mrb, mrb_value v) {
+  static func_ptr<void()> get(mrb_state* mrb, mrb_value v) {
       Deleter<std::function<void()> > d = set_avoid_gc<std::function<void()> >(mrb, v);
-      return make_sp_mrb_func<void()>(d, [=](){
+      return make_func_ptr<void()>(d, [=](){
+          MrubyArenaStore mas(mrb);
           mrb_yield(mrb, v, mrb_nil_value());
       });
   }
-  static mrb_value ret(mrb_state* mrb, sp_mrb_func<void()> p) {
+  static mrb_value ret(mrb_state* mrb, func_ptr<void()> p) {
       // don't call.
+      throw std::runtime_error("don't call Type<func_ptr<void()> >::ret");
       (void)mrb; (void)p; return mrb_nil_value();
   }
+};
+
+// mruby value
+template<>
+struct Type<MrubyRef> {
+  static const char TYPE_NAME[];
+  static int check(mrb_value) { return 1; }
+  static MrubyRef get(mrb_state* mrb, mrb_value v) { (void)mrb; return MrubyRef(mrb, v); }
+  static mrb_value ret(mrb_state*, MrubyRef r) { return r.get_v(); }
 };
 
 

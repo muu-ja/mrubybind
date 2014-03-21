@@ -13,34 +13,38 @@ TYPE_TMPL = <<EOD
 
 // callback R(%PARAMS%)
 template<class R, %CLASSES%>
-struct Type<sp_mrb_func<R(%PARAMS%)> > : public TypeFuncBase {
+struct Type<func_ptr<R(%PARAMS%)> > : public TypeFuncBase {
   static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
-  static sp_mrb_func<R(%PARAMS%)> get(mrb_state* mrb, mrb_value v) {
+  static func_ptr<R(%PARAMS%)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<R(%PARAMS%)> > d = set_avoid_gc<std::function<R(%PARAMS%)> >(mrb, v);
-    return make_sp_mrb_func<R(%PARAMS%)>(d, [=](%ARGS%){
+    return make_func_ptr<R(%PARAMS%)>(d, [=](%ARGS%){
+      MrubyArenaStore mas(mrb);
       mrb_value a[] = {%ARG_VALS%};
       return Type<R>::get(mrb, mrb_yield_argv(mrb, v, %NPARAM%, a));
     });
   }
-  static mrb_value ret(mrb_state* mrb, sp_mrb_func<R(%PARAMS%)> p) {
+  static mrb_value ret(mrb_state* mrb, func_ptr<R(%PARAMS%)> p) {
       // don't call.
+      throw std::runtime_error("don't call Type<func_ptr<R(%PARAMS%)> >::ret");
       (void)mrb; (void)p; return mrb_nil_value();
   }
 };
 
 // callback void(%PARAMS%)
 template<%CLASSES%>
-struct Type<sp_mrb_func<void(%PARAMS%)> > : public TypeFuncBase {
+struct Type<func_ptr<void(%PARAMS%)> > : public TypeFuncBase {
   static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
-  static sp_mrb_func<void(%PARAMS%)> get(mrb_state* mrb, mrb_value v) {
+  static func_ptr<void(%PARAMS%)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<void(%PARAMS%)> > d = set_avoid_gc<std::function<void(%PARAMS%)> >(mrb, v);
-    return make_sp_mrb_func<void(%PARAMS%)>(d, [=](%ARGS%){
+    return make_func_ptr<void(%PARAMS%)>(d, [=](%ARGS%){
+      MrubyArenaStore mas(mrb);
       mrb_value a[] = {%ARG_VALS%};
       mrb_yield_argv(mrb, v, %NPARAM%, a);
     });
   }
-  static mrb_value ret(mrb_state* mrb, sp_mrb_func<void(%PARAMS%)> p) {
+  static mrb_value ret(mrb_state* mrb, func_ptr<void(%PARAMS%)> p) {
       // don't call.
+      throw std::runtime_error("don't call Type<func_ptr<void(%PARAMS%)> >::ret");
       (void)mrb; (void)p; return mrb_nil_value();
   }
 };

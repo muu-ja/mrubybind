@@ -45,4 +45,15 @@ module MrubyBind
       end
     end
   end
+  
+  def MrubyBind.bind_custom_method(mod, binder, class_name, method_name, method_ptr, nparam)
+    mod.const_get(class_name).class_eval do
+      define_method(method_name) do |*args, &block|
+        if args.size + (block ? 1 : 0) != nparam
+          raise ArgumentError.new("`#{method_name}': wrong number of arguments (#{args.size} for #{nparam})")
+        end
+        MrubyBind::call_cfunc(binder, method_ptr, *([self] + args + [block]))
+      end
+    end
+  end
 end

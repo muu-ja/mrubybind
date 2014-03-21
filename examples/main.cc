@@ -26,7 +26,7 @@ void BindFunctionTest(mrb_state* mrb) {
     b.bind("emphasize", emphasize);
   }
 
-  mrb_load_string(mrb,
+  mrubybind::load_string(mrb, 
                   "puts square(1111)\n"
                   "puts emphasize('Hello, mruby!')\n"
                   );
@@ -69,7 +69,7 @@ void BindClassTest(mrb_state* mrb) {
     b.bind_static_method("Foo", "baz", &Foo::baz);
   }
 
-  mrb_load_string(mrb,
+  mrubybind::load_string(mrb, 
                   "foo = Foo.new(123)\n"
                   "p foo\n"
                   "p foo.bar(567)\n"
@@ -91,13 +91,14 @@ void modfunc(int v) {
 
 void UseModuleTest(mrb_state* mrb) {
   {
+    mrubybind::MrubyArenaStore mas(mrb);
     RClass* mod = mrb_define_module(mrb, "Mod");
     mrubybind::MrubyBind b(mrb, mod);
     b.bind("modfunc", modfunc);
     b.bind_const("FOO_VALUE", 1234);
   }
 
-  mrb_load_string(mrb,
+  mrubybind::load_string(mrb,
                   "Mod.modfunc(Mod::FOO_VALUE)\n"
                   );
   if (mrb->exc) {
@@ -109,7 +110,7 @@ void UseModuleTest(mrb_state* mrb) {
 //
 
 
-std::string call_callback(mrubybind::sp_mrb_func<void()> f) {
+std::string call_callback(mrubybind::func_ptr<void()> f) {
   if(f)
   {
       cout << "pre f\n";
@@ -119,7 +120,7 @@ std::string call_callback(mrubybind::sp_mrb_func<void()> f) {
   return "call_callback called\n";
 }
 
-std::string call_callback_a1(mrubybind::sp_mrb_func<void(int a0)> f) {
+std::string call_callback_a1(mrubybind::func_ptr<void(int a0)> f) {
   if(f)
   {
       f.func()(23);
@@ -127,7 +128,7 @@ std::string call_callback_a1(mrubybind::sp_mrb_func<void(int a0)> f) {
   return "call_callback_a1 called\n";
 }
 
-std::string call_callback_a2(mrubybind::sp_mrb_func<void(int a0, std::string a1)> f) {
+std::string call_callback_a2(mrubybind::func_ptr<void(int a0, std::string a1)> f) {
   if(f)
   {
       f.func()(23, "string");
@@ -135,15 +136,15 @@ std::string call_callback_a2(mrubybind::sp_mrb_func<void(int a0, std::string a1)
   return "call_callback_a2 called\n";
 }
 
-std::string call_callback_a1_int(mrubybind::sp_mrb_func<int(int a0)> f) {
+std::string call_callback_a1_int(mrubybind::func_ptr<int(int a0)> f) {
   std::stringstream s;
   s << "call_callback_a1_int return this ->" << f.func()(23);
   return  s.str();
 }
 
-mrubybind::sp_mrb_func<void()> old_f;
+mrubybind::func_ptr<void()> old_f;
 
-void set_old_f(mrubybind::sp_mrb_func<void()> f) {
+void set_old_f(mrubybind::func_ptr<void()> f) {
   old_f = f;
 }
 
@@ -161,13 +162,13 @@ public:
         a = 5;
     }
 
-    int func_test(mrubybind::sp_mrb_func<void(int a0)> f)
+    int func_test(mrubybind::func_ptr<void(int a0)> f)
     {
         f.func()(a);
         return a;
     }
 
-    std::string func_a2_string(mrubybind::sp_mrb_func<std::string(int a0, std::string a1)> f) {
+    std::string func_a2_string(mrubybind::func_ptr<std::string(int a0, std::string a1)> f) {
       return f.func()(48, "str");
     }
 };
@@ -192,7 +193,7 @@ void CallbackFunctionTest(mrb_state* mrb) {
     b.bind_instance_method("Callbacker", "func_a2_string", &Callbacker::func_a2_string);
   }
 
-  mrb_load_string(mrb,
+  mrubybind::load_string(mrb, 
                   "v = call_callback do\n"
                   "  puts \"?? called\n\""
                   "end\n"
@@ -215,10 +216,13 @@ void CallbackFunctionTest(mrb_state* mrb) {
                   "}.to_s\n"
                   "set_old_f do puts \"call old_f\"; end"
                   );
-  mrb_load_string(mrb,
+  if (mrb->exc) {
+    mrb_p(mrb, mrb_obj_value(mrb->exc));
+  }
+  mrubybind::load_string(mrb,
                   "GC.start\n"
                   );
-  mrb_load_string(mrb,
+  mrubybind::load_string(mrb,
                   "puts \"later...\"\n"
                   "call_old_f\n"
                   );
@@ -244,6 +248,10 @@ public:
         std::cout << "ClassValue destruct.\n";
         std::cout.flush();
     }
+    
+    void decriment(){
+        a--;
+    }
 };
 
 std::shared_ptr<ClassValue> create_class_value()
@@ -262,24 +270,92 @@ int class_value_get_a(std::shared_ptr<ClassValue> cv)
     return cv->a;
 }
 
+void class_value_decriment(std::shared_ptr<ClassValue> cv)
+{
+    cv->decriment();
+}
+
+std::weak_ptr<ClassValue> convert_to_weak_class_value(std::shared_ptr<ClassValue> cv){
+    return cv;
+}
+
+int weak_class_value_get_a(std::weak_ptr<ClassValue> cv)
+{
+    if(auto ptr = cv.lock()){
+        return ptr->a;
+    }
+    return 0;
+}
+
 void ClassPointerTest(mrb_state* mrb){
+    
     {
         mrubybind::MrubyBind b(mrb);
         b.bind("create_class_value", create_class_value);
         b.bind_class<std::shared_ptr<ClassValue> >("ClassValue");
+        b.bind_class<std::weak_ptr<ClassValue> >("WeakClassValue");
         b.bind("class_value_increment", class_value_increment);
         b.bind("class_value_get_a", class_value_get_a);
+        b.bind_custom_method(NULL, "ClassValue", "decriment", class_value_decriment);
+        b.bind("convert_to_weak_class_value", convert_to_weak_class_value);
+        b.bind("weak_class_value_get_a", weak_class_value_get_a);
     }
     
-    mrb_load_string(mrb,
+    mrubybind::load_string(mrb, 
                     "puts \"start ClassPointerTest\"\n"
                     "cv = create_class_value\n"
                     "puts \"cv -> #{class_value_get_a(cv)}\"\n"
                     "class_value_increment(cv)\n"
                     "puts \"cv -> #{class_value_get_a cv}\"\n"
+                    "cv.decriment\n"
+                    "puts \"cv -> #{class_value_get_a cv}\"\n"
+                    "wk = convert_to_weak_class_value cv\n"
+                    "puts \"wk->#{weak_class_value_get_a wk}\"\n"
                     "cv = nil\n"
+                    "puts \"GC\"\n"
                     "GC.start\n"
+                    "puts \"wk->#{weak_class_value_get_a wk}\"\n"
                     );
+    if (mrb->exc) {
+        mrb_p(mrb, mrb_obj_value(mrb->exc));
+    }
+}
+
+//=============================================================================
+//
+
+mrubybind::MrubyRef mruby_ref;
+mrubybind::MrubyRef mruby_ref_a, mruby_ref_b;
+
+void set_mruby_ref(mrubybind::MrubyRef r){
+    mruby_ref = r;
+}
+
+void set_mruby_ref_pair(mrubybind::MrubyRef a, mrubybind::MrubyRef b){
+    mruby_ref_a = a;
+    mruby_ref_b = b;
+}
+
+void MrubyRefTest(mrb_state* mrb){
+
+    {
+        mrubybind::MrubyBind b(mrb);
+        b.bind("set_mruby_ref", set_mruby_ref);
+        b.bind("set_mruby_ref_pair", set_mruby_ref_pair);
+        
+    }
+    
+    mrubybind::load_string(mrb, 
+                    "set_mruby_ref \"test3\"\n"
+                    "set_mruby_ref_pair :s, :s\n"
+                    );
+    //
+    std::cout << "mruby_ref = " << mruby_ref.to_s() << std::endl;
+    std::cout << "mruby_ref = " << mruby_ref.to_i() << std::endl;
+    std::cout << "mruby_ref = " << mruby_ref.call("gsub", "te", "toa").to_s() << std::endl;
+    std::cout << ":a == :a = " << mruby_ref_a.obj_equal(mruby_ref_b) << std::endl;
+    std::cout << "arena_index = " << mrb_gc_arena_save(mrb) << std::endl;
+    
     if (mrb->exc) {
         mrb_p(mrb, mrb_obj_value(mrb->exc));
     }
@@ -290,11 +366,23 @@ void ClassPointerTest(mrb_state* mrb){
 int main() {
   mrb_state* mrb = mrb_open();
 
-  BindFunctionTest(mrb);
-  BindClassTest(mrb);
-  UseModuleTest(mrb);
-  CallbackFunctionTest(mrb);
-  ClassPointerTest(mrb);
+  try{
+    BindFunctionTest(mrb);
+    BindClassTest(mrb);
+    UseModuleTest(mrb);
+    CallbackFunctionTest(mrb);
+    ClassPointerTest(mrb);
+    MrubyRefTest(mrb);
+  }
+  catch(std::runtime_error e){
+    std::cout << "std::runtime_error -> " << e.what() << std::endl;
+  }
+  catch(...){
+    std::cout << "unknown error!" << std::endl;
+    std::cout.flush();
+    throw;
+  }
+  
 
   mrb_close(mrb);
   return 0;

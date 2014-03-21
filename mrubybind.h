@@ -1010,6 +1010,22 @@ public:
     mrb_funcall(mrb_, mod_mrubybind_, "bind_static_method", 6,
                 mod, binder, class_name_v, method_name_v, func_ptr_v, nparam_v);
   }
+  
+  // Bind custom method.
+  template <class Func>
+  void bind_custom_method(const char* module_name, const char* class_name, const char* method_name, Func func_ptr) {
+    mrb_value mod = mrb_obj_value(mod_);
+    if(module_name){
+        mod = mrb_obj_value(mrb_define_module(mrb_, module_name));
+    }
+    mrb_value binder = mrb_voidp_value(mrb_, (void*)Binder<Func>::call);
+    mrb_value class_name_v = mrb_str_new_cstr(mrb_, class_name);
+    mrb_value method_name_v = mrb_str_new_cstr(mrb_, method_name);
+    mrb_value func_ptr_v = mrb_voidp_value(mrb_, reinterpret_cast<void*>(func_ptr));
+    mrb_value nparam_v = mrb_fixnum_value(Binder<Func>::NPARAM - 1);
+    mrb_funcall(mrb_, mod_mrubybind_, "bind_custom_method", 6, 
+                mod, binder, class_name_v, method_name_v, func_ptr_v, nparam_v);
+  }
 
   mrb_state* get_mrb(){
       return mrb_;
@@ -1027,6 +1043,8 @@ private:
   RClass* mod_;
   int arena_index_;
 };
+
+MrubyRef load_string(mrb_state* mrb, std::string code);
 
 }  // namespace mrubybind
 

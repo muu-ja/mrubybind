@@ -1,6 +1,7 @@
 
 TARGET= ../mrubybind.h
 
+
 all: $(TARGET)
 
 clean:
@@ -14,5 +15,8 @@ clean:
 	
 ../mrubybind_types_generated.h:	gen_types_template.rb
 	ruby gen_types_template.rb > ../mrubybind_types_generated.h
+    
+../mrubybind_call_generated.h:	gen_call_template.rb
+	ruby gen_call_template.rb > ../mrubybind_call_generated.h
 
 #
