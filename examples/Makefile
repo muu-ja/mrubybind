@@ -7,6 +7,6 @@ all: a.out
 clean:
 	rm -rf *.o a.out
 
-a.out:	main.cc ../mrubybind.cc ../mrubybind.h ../mrubybind_types.h ../mrubybind.inc ../mrubybind.dat
+a.out:	main.cc ../mrubybind.cc ../mrubybind.h ../mrubybind.inc ../mrubybind.dat
 	g++ -g -std=c++11 -o a.out -Wall -Wextra main.cc ../mrubybind.cc $(INC) $(LIB)
 

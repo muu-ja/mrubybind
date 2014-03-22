@@ -39,6 +39,29 @@ public:
                        mrb_cptr_value(mrb_, (void*)new_func_ptr),
                        ClassBinder<Func>::ctor);
   }
+  
+  // Bind class.(no new func)
+  template <class C>
+  void bind_class(const char* module_name, const char* class_name) {
+    struct RClass *tc = mrb_define_class(mrb_, class_name, mrb_->object_class);
+    MRB_SET_INSTANCE_TT(tc, MRB_TT_DATA);
+    mrb_value mod = mrb_obj_value(mod_);
+    if(module_name){
+        mod = mrb_obj_value(mrb_define_module(mrb_, module_name));
+    }
+    mrb_value binder = mrb_voidp_value(mrb_, (void*)ClassBinder<C*(*)(void)>::ctor);
+    mrb_value class_name_v = mrb_str_new_cstr(mrb_, class_name);
+    mrb_value new_func_ptr_v = mrb_nil_value();
+    mrb_value nparam_v = mrb_fixnum_value(0);
+    Type<C>::class_name = class_name;
+    mrb_funcall(mrb_, mod_mrubybind_, "bind_class", 5, mod, binder,
+                class_name_v, new_func_ptr_v, nparam_v);
+  }
+  
+  template <class C>
+  void bind_class(const char* class_name) {
+    bind_class<C>(NULL, class_name);
+  }
 
   // Bind instance method.
   template <class Method>
@@ -64,6 +87,29 @@ public:
     struct RClass* klass = GetClass(class_name);
     mrb_define_class_method_raw(mrb_, klass, method_name_s, proc);
   }
+  
+  // Bind custom method.
+  template <class Func>
+  void bind_custom_method(const char* module_name, const char* class_name, const char* method_name, Func func_ptr) {
+    mrb_value mod = mrb_obj_value(mod_);
+    if(module_name){
+        mod = mrb_obj_value(mrb_define_module(mrb_, module_name));
+    }
+    mrb_value binder = mrb_voidp_value(mrb_, (void*)Binder<Func>::call);
+    mrb_value class_name_v = mrb_str_new_cstr(mrb_, class_name);
+    mrb_value method_name_v = mrb_str_new_cstr(mrb_, method_name);
+    mrb_value func_ptr_v = mrb_voidp_value(mrb_, reinterpret_cast<void*>(func_ptr));
+    mrb_value nparam_v = mrb_fixnum_value(Binder<Func>::NPARAM - 1);
+    mrb_funcall(mrb_, mod_mrubybind_, "bind_custom_method", 6,
+                mod, binder, class_name_v, method_name_v, func_ptr_v, nparam_v);
+  }
+
+  mrb_state* get_mrb(){
+      return mrb_;
+  }
+  mrb_value get_avoid_gc_table(){
+      return avoid_gc_table_;
+  }
 
 private:
   void Initialize();
@@ -83,8 +129,11 @@ private:
 
   mrb_state* mrb_;
   RClass* mod_;
+  mrb_value avoid_gc_table_;
   int arena_index_;
 };
+
+MrubyRef load_string(mrb_state* mrb, std::string code);
 
 }  // namespace mrubybind
 
