@@ -346,7 +346,9 @@ void MrubyRefTest(mrb_state* mrb){
     }
     
     mrubybind::load_string(mrb, 
-                    "set_mruby_ref \"test3\"\n"
+                    "set_mruby_ref \"3test\"\n"
+                    "s = \"aaa\"\n"
+                    "set_mruby_ref_pair s, s\n"
                     "set_mruby_ref_pair :s, :s\n"
                     );
     //

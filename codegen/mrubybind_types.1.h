@@ -121,6 +121,12 @@ public:
     Deleter(mrb_state* mrb, mrb_value v){
         mrbsp = MrubyBindStatus::search(mrb);
         mrb_value avoid_gc_table = mrbsp->get_avoid_gc_table();
+        mrb_value s = mrb_hash_get(mrb, avoid_gc_table, v);
+        if(mrb_test(v) && mrb_obj_equal(mrb, v, s)){
+            mrb_value a = mrb_ary_new(mrb);
+            mrb_ary_push(mrb, a, v);
+            v = a;
+        }
         mrb_hash_set(mrb, avoid_gc_table, v, v);
         v_ = v;
     }
