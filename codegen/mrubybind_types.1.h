@@ -143,18 +143,18 @@ public:
 };
 
 template<class T> using obj_ptr = std::shared_ptr<T>;
-//template<class T> using func_ptr = std::shared_ptr<std::function<T> >;
+//template<class T> using FuncPtr = std::shared_ptr<std::function<T> >;
 
-template<class T> class func_ptr{
+template<class T> class FuncPtr{
     std::shared_ptr<std::function<T> > p;
 public:
-    func_ptr(){
+    FuncPtr(){
 
     }
-    template<class D>func_ptr(std::function<T>* pt, D d) : p(pt, d){
+    template<class D>FuncPtr(std::function<T>* pt, D d) : p(pt, d){
 
     }
-    ~func_ptr(){
+    ~FuncPtr(){
 
     }
     std::shared_ptr<std::function<T> >& ref(){
@@ -196,10 +196,10 @@ template<class T> obj_ptr<T> make_obj_ptr(Deleter<T> d, T t){
     return obj_ptr<T>(pt, d);
 }
 
-template<class T> func_ptr<T> make_func_ptr(Deleter<std::function<T> > d, std::function<T> t){
+template<class T> FuncPtr<T> make_FuncPtr(Deleter<std::function<T> > d, std::function<T> t){
     std::function<T>* pt = new std::function<T>();
     *pt = t;
-    return func_ptr<T>(pt, d);
+    return FuncPtr<T>(pt, d);
 }
 
 template <class T>
@@ -348,35 +348,35 @@ struct TypeFuncBase{
 };
 
 template<class R>
-struct Type<func_ptr<R()> > :public TypeFuncBase {
+struct Type<FuncPtr<R()> > :public TypeFuncBase {
   static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
-  static func_ptr<R()> get(mrb_state* mrb, mrb_value v) {
+  static FuncPtr<R()> get(mrb_state* mrb, mrb_value v) {
       Deleter<std::function<R()> > d = set_avoid_gc<std::function<R()> >(mrb, v);
-      return make_func_ptr<R()>(d, [=](){
+      return make_FuncPtr<R()>(d, [=](){
           MrubyArenaStore mas(mrb);
           return Type<R>::get(mrb, mrb_yield(mrb, v, mrb_nil_value()));
       });
   }
-  static mrb_value ret(mrb_state* mrb, func_ptr<R()> p) {
+  static mrb_value ret(mrb_state* mrb, FuncPtr<R()> p) {
       // don't call.
-      throw std::runtime_error("don't call Type<func_ptr<R()> >::ret");
+      throw std::runtime_error("don't call Type<FuncPtr<R()> >::ret");
       (void)mrb; (void)p; return mrb_nil_value();
   }
 };
 
 template<>
-struct Type<func_ptr<void()> > :public TypeFuncBase {
+struct Type<FuncPtr<void()> > :public TypeFuncBase {
   static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
-  static func_ptr<void()> get(mrb_state* mrb, mrb_value v) {
+  static FuncPtr<void()> get(mrb_state* mrb, mrb_value v) {
       Deleter<std::function<void()> > d = set_avoid_gc<std::function<void()> >(mrb, v);
-      return make_func_ptr<void()>(d, [=](){
+      return make_FuncPtr<void()>(d, [=](){
           MrubyArenaStore mas(mrb);
           mrb_yield(mrb, v, mrb_nil_value());
       });
   }
-  static mrb_value ret(mrb_state* mrb, func_ptr<void()> p) {
+  static mrb_value ret(mrb_state* mrb, FuncPtr<void()> p) {
       // don't call.
-      throw std::runtime_error("don't call Type<func_ptr<void()> >::ret");
+      throw std::runtime_error("don't call Type<FuncPtr<void()> >::ret");
       (void)mrb; (void)p; return mrb_nil_value();
   }
 };

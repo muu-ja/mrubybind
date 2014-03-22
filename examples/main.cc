@@ -110,7 +110,7 @@ void UseModuleTest(mrb_state* mrb) {
 //
 
 
-std::string call_callback(mrubybind::func_ptr<void()> f) {
+std::string call_callback(mrubybind::FuncPtr<void()> f) {
   if(f)
   {
       cout << "pre f\n";
@@ -120,7 +120,7 @@ std::string call_callback(mrubybind::func_ptr<void()> f) {
   return "call_callback called\n";
 }
 
-std::string call_callback_a1(mrubybind::func_ptr<void(int a0)> f) {
+std::string call_callback_a1(mrubybind::FuncPtr<void(int a0)> f) {
   if(f)
   {
       f.func()(23);
@@ -128,7 +128,7 @@ std::string call_callback_a1(mrubybind::func_ptr<void(int a0)> f) {
   return "call_callback_a1 called\n";
 }
 
-std::string call_callback_a2(mrubybind::func_ptr<void(int a0, std::string a1)> f) {
+std::string call_callback_a2(mrubybind::FuncPtr<void(int a0, std::string a1)> f) {
   if(f)
   {
       f.func()(23, "string");
@@ -136,15 +136,15 @@ std::string call_callback_a2(mrubybind::func_ptr<void(int a0, std::string a1)> f
   return "call_callback_a2 called\n";
 }
 
-std::string call_callback_a1_int(mrubybind::func_ptr<int(int a0)> f) {
+std::string call_callback_a1_int(mrubybind::FuncPtr<int(int a0)> f) {
   std::stringstream s;
   s << "call_callback_a1_int return this ->" << f.func()(23);
   return  s.str();
 }
 
-mrubybind::func_ptr<void()> old_f;
+mrubybind::FuncPtr<void()> old_f;
 
-void set_old_f(mrubybind::func_ptr<void()> f) {
+void set_old_f(mrubybind::FuncPtr<void()> f) {
   old_f = f;
 }
 
@@ -162,13 +162,13 @@ public:
         a = 5;
     }
 
-    int func_test(mrubybind::func_ptr<void(int a0)> f)
+    int func_test(mrubybind::FuncPtr<void(int a0)> f)
     {
         f.func()(a);
         return a;
     }
 
-    std::string func_a2_string(mrubybind::func_ptr<std::string(int a0, std::string a1)> f) {
+    std::string func_a2_string(mrubybind::FuncPtr<std::string(int a0, std::string a1)> f) {
       return f.func()(48, "str");
     }
 };
