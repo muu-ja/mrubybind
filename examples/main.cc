@@ -110,35 +110,35 @@ void UseModuleTest(mrb_state* mrb) {
 //
 
 
-std::string call_callback(mrubybind::FuncPtr<void()> f) {
+std::string call_block(mrubybind::FuncPtr<void()> f) {
   if(f)
   {
       cout << "pre f\n";
       f.func()();
       cout << "post f\n";
   }
-  return "call_callback called\n";
+  return "call_block called\n";
 }
 
-std::string call_callback_a1(mrubybind::FuncPtr<void(int a0)> f) {
+std::string call_block_a1(mrubybind::FuncPtr<void(int a0)> f) {
   if(f)
   {
       f.func()(23);
   }
-  return "call_callback_a1 called\n";
+  return "call_block_a1 called\n";
 }
 
-std::string call_callback_a2(mrubybind::FuncPtr<void(int a0, std::string a1)> f) {
+std::string call_block_a2(mrubybind::FuncPtr<void(int a0, std::string a1)> f) {
   if(f)
   {
       f.func()(23, "string");
   }
-  return "call_callback_a2 called\n";
+  return "call_block_a2 called\n";
 }
 
-std::string call_callback_a1_int(mrubybind::FuncPtr<int(int a0)> f) {
+std::string call_block_a1_int(mrubybind::FuncPtr<int(int a0)> f) {
   std::stringstream s;
-  s << "call_callback_a1_int return this ->" << f.func()(23);
+  s << "call_block_a1_int return this ->" << f.func()(23);
   return  s.str();
 }
 
@@ -181,10 +181,10 @@ Callbacker* new_callbacker()
 void CallbackFunctionTest(mrb_state* mrb) {
   {
     mrubybind::MrubyBind b(mrb);
-    b.bind("call_callback", call_callback);
-    b.bind("call_callback_a1", call_callback_a1);
-    b.bind("call_callback_a2", call_callback_a2);
-    b.bind("call_callback_a1_int", call_callback_a1_int);
+    b.bind("call_block", call_block);
+    b.bind("call_block_a1", call_block_a1);
+    b.bind("call_block_a2", call_block_a2);
+    b.bind("call_block_a1_int", call_block_a1_int);
     b.bind("set_old_f", set_old_f);
     b.bind("call_old_f", call_old_f);
 
@@ -194,17 +194,17 @@ void CallbackFunctionTest(mrb_state* mrb) {
   }
 
   mrubybind::load_string(mrb, 
-                  "v = call_callback do\n"
+                  "v = call_block do\n"
                   "  puts \"?? called\n\""
                   "end\n"
                   "puts v\n"
-                  "puts call_callback_a1 { |a0|\n"
+                  "puts call_block_a1 { |a0|\n"
                   "  puts \"a0 = #{a0}\"\n"
                   "}\n"
-                  "puts call_callback_a2 { |a0, a1|\n"
+                  "puts call_block_a2 { |a0, a1|\n"
                   "  puts \"a0 = #{a0}, a1 = #{a1}\"\n"
                   "}\n"
-                  "puts call_callback_a1_int { |a0|\n"
+                  "puts call_block_a1_int { |a0|\n"
                   "  puts \"a0 = #{a0}\"\n"
                   "}\n"
                   "puts \"Callbacker.new.func_test \" + Callbacker.new.func_test {|a0|\n"

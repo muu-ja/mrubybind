@@ -3,6 +3,7 @@ mrubybind - Binding library for mruby/C++
 
 mrubybind automatically creates C function/class-method binder for [mruby](https://github.com/mruby/mruby),
 using C++ template partial specialization.
+require C++11. because it use std::function and lambda.
 
 ## Usage
 
@@ -124,46 +125,151 @@ using C++ template partial specialization.
   }
   ```
 
-## Supported types
-| C type              | mruby type              |
-|---------------------|-------------------------|
-| int, unsigned int   | Fixnum                  |
-| float, double       | Float                   |
-| const char*, string | String                  |
-| bool                | TrueClass or FalseClass |
-| void*               | Object                  |
-
-See [mrubybind.h](https://github.com/ktaobo/mrubybind/blob/master/mrubybind.h).
-
-                            
-
 ### Call block from C++ code
 
 1. define C++ function having callback function
 
-        std::string call_block(mrubybind::sp_mrb_func<void(int a0)> f) {
-          if(f)
-          {
-              f.func()(23);
-          }
-          return "called\n";
-        }
+  ```c++
+  std::string call_block(mrubybind::FuncPtr<void(int a0)> f) {
+    if(f)
+    {
+        f.func()(23);
+    }
+    return "called\n";
+  }
+  ```
 
 2. Bind it using mrubybind:
 
-        #include "mrubybind.h"
-        
-        void install_square_function(mrb_state* mrb) {
-          mrubybind::MrubyBind b(mrb);
-          b.bind("call_block", call_block);
-        }
-        
+  ```c++
+  #include "mrubybind.h"
+  
+  void install_call_block_function(mrb_state* mrb) {
+    mrubybind::MrubyBind b(mrb);
+    b.bind("call_block", call_block);
+  }
+  ```
+
 3. Call it from mruby:
 
-        puts call_block { |a0|
-          puts "a0 = #{a0}"
-        }
+  ```ruby
+  puts call_block { |a0|
+    puts "a0 = #{a0}"
+  }
+  ```
 
+### Manage Registered Class Instance
+
+1. Define C++ function managing class instance:
+
+  ```c++
+  class ClassValue{
+  public:
+    int a;
+    
+    ClassValue(){
+        a = 7;
+    }
+    
+    ~ClassValue(){
+        
+    }
+    
+    void decriment(){
+        a--;
+    }
+  };
+
+  std::shared_ptr<ClassValue> create_class_value()
+  {
+    return std::shared_ptr<ClassValue>(new ClassValue());
+  }
+
+  void class_value_increment(std::shared_ptr<ClassValue> cv)
+  {
+    cv->a++;
+  }
+
+  int class_value_get_a(std::shared_ptr<ClassValue> cv)
+  {
+    return cv->a;
+  }
+  ```
+  
+2. Register class and bind function:
+
+  ```c++
+  #include "mrubybind.h"
+  
+  void install_class_value_function(mrb_state* mrb) {
+    mrubybind::MrubyBind b(mrb);
+    b.bind("create_class_value", create_class_value);
+    b.bind_class<std::shared_ptr<ClassValue> >("ClassValue");
+    b.bind("class_value_increment", class_value_increment);
+    b.bind("class_value_get_a", class_value_get_a);
+  }
+  ```  
+  
+3. Call it from mruby:
+
+   ```ruby
+   cv = create_class_value\n"
+   puts "cv -> #{class_value_get_a(cv)}"
+   class_value_increment(cv)
+   puts "cv -> #{class_value_get_a cv}"
+   ```
+
+### Refering to mruby object
+
+1. Recieve mruby object reference function:
+
+  ```c++
+  mrubybind::MrubyRef mruby_ref;
+  
+  void set_mruby_ref(mrubybind::MrubyRef r){
+    mruby_ref = r;
+  }
+  ```
+  
+2. Bind it using mrubybind:
+
+  ```c++
+  #include "mrubybind.h"
+  
+  void install_mruby_ref_function(mrb_state* mrb) {
+    mrubybind::MrubyBind b(mrb);
+    b.bind("set_mruby_ref", set_mruby_ref);
+  }
+  ```
+  
+3. Send from mruby code:
+
+  ```ruby
+  set_mruby_ref "3test"
+  ```
+
+4. Manage reference of mruby object on C++:  
+  
+  ```c++
+  std::cout << "mruby_ref = " << mruby_ref.to_s() << std::endl;
+  std::cout << "mruby_ref = " << mruby_ref.to_i() << std::endl;
+  std::cout << "mruby_ref = " << mruby_ref.call("gsub", "te", "toa").to_s() << std::endl;
+  ```
+
+## Supported types
+| C++ type                 | mruby type              |
+|--------------------------|-------------------------|
+| int, unsigned int        | Fixnum                  |
+| float, double            | Float                   |
+| const char*, string      | String                  |
+| bool                     | TrueClass or FalseClass |
+| void*                    | Object                  |
+| mrubybind::FuncPtr<...>  | Proc                    |
+| mrubybind::MrubyRef      | Any Mruby Object        |
+| registered class         | registered class        |
+
+See [mrubybind.h](https://github.com/ktaobo/mrubybind/blob/master/mrubybind.h).
+  
 # License
 
 MIT license.
