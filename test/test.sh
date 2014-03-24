@@ -48,10 +48,25 @@ run class 'Foo::ctor(123)
 99980001
 Foo::dtor()'
 run module 'modfunc called: 1234'
+run class_value 'start ClassPointerTest
+ClassValue construct.
+cv -> 7
+cv -> 8
+cv -> 7
+cv.call_block -> test7
+wk->7
+GC
+ClassValue destruct.
+wk->0'
+run mruby_ref 'mruby_ref = 3test
+mruby_ref = 3
+mruby_ref = 3toast
+:a == :a = 1
+arena_index = 0'
 
 # Failure cases
 fail wrong_type "TypeError: can't convert String into Fixnum, argument 1(1111)"
-fail wrong_arg_num "ArgumentError: 'square': wrong number of arguments (2 for 1)"
+fail wrong_arg_num "ArgumentError: \`square': wrong number of arguments (2 for 1)"
 
 ################################################################
 # All tests succeeded.

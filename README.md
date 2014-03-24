@@ -194,6 +194,11 @@ require C++11. because it use std::function and lambda.
   {
     return cv->a;
   }
+  
+  void class_value_decriment(std::shared_ptr<ClassValue> cv)
+  {
+    cv->decriment();
+  }
   ```
   
 2. Register class and bind function:
@@ -207,15 +212,18 @@ require C++11. because it use std::function and lambda.
     b.bind_class<std::shared_ptr<ClassValue> >("ClassValue");
     b.bind("class_value_increment", class_value_increment);
     b.bind("class_value_get_a", class_value_get_a);
+    b.bind_custom_method(NULL, "ClassValue", "decriment", class_value_decriment);
   }
   ```  
   
 3. Call it from mruby:
 
    ```ruby
-   cv = create_class_value\n"
+   cv = create_class_value
    puts "cv -> #{class_value_get_a(cv)}"
    class_value_increment(cv)
+   puts "cv -> #{class_value_get_a cv}"
+   cv.decriment
    puts "cv -> #{class_value_get_a cv}"
    ```
 

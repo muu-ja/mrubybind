@@ -103,6 +103,11 @@ public:
     mrb_funcall(mrb_, mod_mrubybind_, "bind_custom_method", 6,
                 mod, binder, class_name_v, method_name_v, func_ptr_v, nparam_v);
   }
+  
+  template <class Func>
+  void bind_custom_method(const char* class_name, const char* method_name, Func func_ptr) {
+    bind_custom_method(NULL, class_name, method_name, func_ptr);
+  }
 
   mrb_state* get_mrb(){
       return mrb_;
