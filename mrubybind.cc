@@ -372,11 +372,11 @@ std::string MrubyRef::to_s() const{
         MrubyArenaStore mas(mrb);
         mrb_value v = *(this->v.get());
         if(mrb_string_p(v)){
-            return std::string(RSTRING_PTR(v));
+            return std::string(RSTRING_PTR(v), RSTRING_LEN(v));
         }
         else{
             v = mrb_funcall(mrb, v, "to_s", 0);
-            return std::string(RSTRING_PTR(v));
+            return std::string(RSTRING_PTR(v), RSTRING_LEN(v));
         }
     }
     else{
