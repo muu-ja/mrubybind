@@ -1,13 +1,13 @@
 // This file is generated from gen_template.rb
 #define ARG(mrb, i)  Type<P##i>::get(mrb, args[i])
-#define CHECK(i)  {if(!Type<P##i>::check(args[i])) return RAISE(i);}
+#define CHECK(i)  {if(!Type<P##i>::check(mrb, args[i])) return RAISE(i);}
 #define RAISE(i)  raise(mrb, i, Type<P##i>::TYPE_NAME, args[i])
 
 
 // callback R(P0)
 template<class R, class P0>
 struct Type<FuncPtr<R(P0)> > : public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<R(P0)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<R(P0)> > d = set_avoid_gc<std::function<R(P0)> >(mrb, v);
     return make_FuncPtr<R(P0)>(d, [=](P0 a0){
@@ -26,7 +26,7 @@ struct Type<FuncPtr<R(P0)> > : public TypeFuncBase {
 // callback void(P0)
 template<class P0>
 struct Type<FuncPtr<void(P0)> > : public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<void(P0)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<void(P0)> > d = set_avoid_gc<std::function<void(P0)> >(mrb, v);
     return make_FuncPtr<void(P0)>(d, [=](P0 a0){
@@ -46,7 +46,7 @@ struct Type<FuncPtr<void(P0)> > : public TypeFuncBase {
 // callback R(P0, P1)
 template<class R, class P0, class P1>
 struct Type<FuncPtr<R(P0, P1)> > : public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<R(P0, P1)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<R(P0, P1)> > d = set_avoid_gc<std::function<R(P0, P1)> >(mrb, v);
     return make_FuncPtr<R(P0, P1)>(d, [=](P0 a0, P1 a1){
@@ -65,7 +65,7 @@ struct Type<FuncPtr<R(P0, P1)> > : public TypeFuncBase {
 // callback void(P0, P1)
 template<class P0, class P1>
 struct Type<FuncPtr<void(P0, P1)> > : public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<void(P0, P1)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<void(P0, P1)> > d = set_avoid_gc<std::function<void(P0, P1)> >(mrb, v);
     return make_FuncPtr<void(P0, P1)>(d, [=](P0 a0, P1 a1){
@@ -85,7 +85,7 @@ struct Type<FuncPtr<void(P0, P1)> > : public TypeFuncBase {
 // callback R(P0, P1, P2)
 template<class R, class P0, class P1, class P2>
 struct Type<FuncPtr<R(P0, P1, P2)> > : public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<R(P0, P1, P2)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<R(P0, P1, P2)> > d = set_avoid_gc<std::function<R(P0, P1, P2)> >(mrb, v);
     return make_FuncPtr<R(P0, P1, P2)>(d, [=](P0 a0, P1 a1, P2 a2){
@@ -104,7 +104,7 @@ struct Type<FuncPtr<R(P0, P1, P2)> > : public TypeFuncBase {
 // callback void(P0, P1, P2)
 template<class P0, class P1, class P2>
 struct Type<FuncPtr<void(P0, P1, P2)> > : public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<void(P0, P1, P2)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<void(P0, P1, P2)> > d = set_avoid_gc<std::function<void(P0, P1, P2)> >(mrb, v);
     return make_FuncPtr<void(P0, P1, P2)>(d, [=](P0 a0, P1 a1, P2 a2){
@@ -124,7 +124,7 @@ struct Type<FuncPtr<void(P0, P1, P2)> > : public TypeFuncBase {
 // callback R(P0, P1, P2, P3)
 template<class R, class P0, class P1, class P2, class P3>
 struct Type<FuncPtr<R(P0, P1, P2, P3)> > : public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<R(P0, P1, P2, P3)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<R(P0, P1, P2, P3)> > d = set_avoid_gc<std::function<R(P0, P1, P2, P3)> >(mrb, v);
     return make_FuncPtr<R(P0, P1, P2, P3)>(d, [=](P0 a0, P1 a1, P2 a2, P3 a3){
@@ -143,7 +143,7 @@ struct Type<FuncPtr<R(P0, P1, P2, P3)> > : public TypeFuncBase {
 // callback void(P0, P1, P2, P3)
 template<class P0, class P1, class P2, class P3>
 struct Type<FuncPtr<void(P0, P1, P2, P3)> > : public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<void(P0, P1, P2, P3)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<void(P0, P1, P2, P3)> > d = set_avoid_gc<std::function<void(P0, P1, P2, P3)> >(mrb, v);
     return make_FuncPtr<void(P0, P1, P2, P3)>(d, [=](P0 a0, P1 a1, P2 a2, P3 a3){
@@ -163,7 +163,7 @@ struct Type<FuncPtr<void(P0, P1, P2, P3)> > : public TypeFuncBase {
 // callback R(P0, P1, P2, P3, P4)
 template<class R, class P0, class P1, class P2, class P3, class P4>
 struct Type<FuncPtr<R(P0, P1, P2, P3, P4)> > : public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<R(P0, P1, P2, P3, P4)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<R(P0, P1, P2, P3, P4)> > d = set_avoid_gc<std::function<R(P0, P1, P2, P3, P4)> >(mrb, v);
     return make_FuncPtr<R(P0, P1, P2, P3, P4)>(d, [=](P0 a0, P1 a1, P2 a2, P3 a3, P4 a4){
@@ -182,7 +182,7 @@ struct Type<FuncPtr<R(P0, P1, P2, P3, P4)> > : public TypeFuncBase {
 // callback void(P0, P1, P2, P3, P4)
 template<class P0, class P1, class P2, class P3, class P4>
 struct Type<FuncPtr<void(P0, P1, P2, P3, P4)> > : public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<void(P0, P1, P2, P3, P4)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<void(P0, P1, P2, P3, P4)> > d = set_avoid_gc<std::function<void(P0, P1, P2, P3, P4)> >(mrb, v);
     return make_FuncPtr<void(P0, P1, P2, P3, P4)>(d, [=](P0 a0, P1 a1, P2 a2, P3 a3, P4 a4){
@@ -202,7 +202,7 @@ struct Type<FuncPtr<void(P0, P1, P2, P3, P4)> > : public TypeFuncBase {
 // callback R(P0, P1, P2, P3, P4, P5)
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5>
 struct Type<FuncPtr<R(P0, P1, P2, P3, P4, P5)> > : public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<R(P0, P1, P2, P3, P4, P5)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<R(P0, P1, P2, P3, P4, P5)> > d = set_avoid_gc<std::function<R(P0, P1, P2, P3, P4, P5)> >(mrb, v);
     return make_FuncPtr<R(P0, P1, P2, P3, P4, P5)>(d, [=](P0 a0, P1 a1, P2 a2, P3 a3, P4 a4, P5 a5){
@@ -221,7 +221,7 @@ struct Type<FuncPtr<R(P0, P1, P2, P3, P4, P5)> > : public TypeFuncBase {
 // callback void(P0, P1, P2, P3, P4, P5)
 template<class P0, class P1, class P2, class P3, class P4, class P5>
 struct Type<FuncPtr<void(P0, P1, P2, P3, P4, P5)> > : public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<void(P0, P1, P2, P3, P4, P5)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<void(P0, P1, P2, P3, P4, P5)> > d = set_avoid_gc<std::function<void(P0, P1, P2, P3, P4, P5)> >(mrb, v);
     return make_FuncPtr<void(P0, P1, P2, P3, P4, P5)>(d, [=](P0 a0, P1 a1, P2 a2, P3 a3, P4 a4, P5 a5){
@@ -241,7 +241,7 @@ struct Type<FuncPtr<void(P0, P1, P2, P3, P4, P5)> > : public TypeFuncBase {
 // callback R(P0, P1, P2, P3, P4, P5, P6)
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6>
 struct Type<FuncPtr<R(P0, P1, P2, P3, P4, P5, P6)> > : public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<R(P0, P1, P2, P3, P4, P5, P6)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<R(P0, P1, P2, P3, P4, P5, P6)> > d = set_avoid_gc<std::function<R(P0, P1, P2, P3, P4, P5, P6)> >(mrb, v);
     return make_FuncPtr<R(P0, P1, P2, P3, P4, P5, P6)>(d, [=](P0 a0, P1 a1, P2 a2, P3 a3, P4 a4, P5 a5, P6 a6){
@@ -260,7 +260,7 @@ struct Type<FuncPtr<R(P0, P1, P2, P3, P4, P5, P6)> > : public TypeFuncBase {
 // callback void(P0, P1, P2, P3, P4, P5, P6)
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6>
 struct Type<FuncPtr<void(P0, P1, P2, P3, P4, P5, P6)> > : public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<void(P0, P1, P2, P3, P4, P5, P6)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<void(P0, P1, P2, P3, P4, P5, P6)> > d = set_avoid_gc<std::function<void(P0, P1, P2, P3, P4, P5, P6)> >(mrb, v);
     return make_FuncPtr<void(P0, P1, P2, P3, P4, P5, P6)>(d, [=](P0 a0, P1 a1, P2 a2, P3 a3, P4 a4, P5 a5, P6 a6){
@@ -280,7 +280,7 @@ struct Type<FuncPtr<void(P0, P1, P2, P3, P4, P5, P6)> > : public TypeFuncBase {
 // callback R(P0, P1, P2, P3, P4, P5, P6, P7)
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7>
 struct Type<FuncPtr<R(P0, P1, P2, P3, P4, P5, P6, P7)> > : public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<R(P0, P1, P2, P3, P4, P5, P6, P7)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<R(P0, P1, P2, P3, P4, P5, P6, P7)> > d = set_avoid_gc<std::function<R(P0, P1, P2, P3, P4, P5, P6, P7)> >(mrb, v);
     return make_FuncPtr<R(P0, P1, P2, P3, P4, P5, P6, P7)>(d, [=](P0 a0, P1 a1, P2 a2, P3 a3, P4 a4, P5 a5, P6 a6, P7 a7){
@@ -299,7 +299,7 @@ struct Type<FuncPtr<R(P0, P1, P2, P3, P4, P5, P6, P7)> > : public TypeFuncBase {
 // callback void(P0, P1, P2, P3, P4, P5, P6, P7)
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7>
 struct Type<FuncPtr<void(P0, P1, P2, P3, P4, P5, P6, P7)> > : public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<void(P0, P1, P2, P3, P4, P5, P6, P7)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<void(P0, P1, P2, P3, P4, P5, P6, P7)> > d = set_avoid_gc<std::function<void(P0, P1, P2, P3, P4, P5, P6, P7)> >(mrb, v);
     return make_FuncPtr<void(P0, P1, P2, P3, P4, P5, P6, P7)>(d, [=](P0 a0, P1 a1, P2 a2, P3 a3, P4 a4, P5 a5, P6 a6, P7 a7){
@@ -319,7 +319,7 @@ struct Type<FuncPtr<void(P0, P1, P2, P3, P4, P5, P6, P7)> > : public TypeFuncBas
 // callback R(P0, P1, P2, P3, P4, P5, P6, P7, P8)
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8>
 struct Type<FuncPtr<R(P0, P1, P2, P3, P4, P5, P6, P7, P8)> > : public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<R(P0, P1, P2, P3, P4, P5, P6, P7, P8)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<R(P0, P1, P2, P3, P4, P5, P6, P7, P8)> > d = set_avoid_gc<std::function<R(P0, P1, P2, P3, P4, P5, P6, P7, P8)> >(mrb, v);
     return make_FuncPtr<R(P0, P1, P2, P3, P4, P5, P6, P7, P8)>(d, [=](P0 a0, P1 a1, P2 a2, P3 a3, P4 a4, P5 a5, P6 a6, P7 a7, P8 a8){
@@ -338,7 +338,7 @@ struct Type<FuncPtr<R(P0, P1, P2, P3, P4, P5, P6, P7, P8)> > : public TypeFuncBa
 // callback void(P0, P1, P2, P3, P4, P5, P6, P7, P8)
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8>
 struct Type<FuncPtr<void(P0, P1, P2, P3, P4, P5, P6, P7, P8)> > : public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<void(P0, P1, P2, P3, P4, P5, P6, P7, P8)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<void(P0, P1, P2, P3, P4, P5, P6, P7, P8)> > d = set_avoid_gc<std::function<void(P0, P1, P2, P3, P4, P5, P6, P7, P8)> >(mrb, v);
     return make_FuncPtr<void(P0, P1, P2, P3, P4, P5, P6, P7, P8)>(d, [=](P0 a0, P1 a1, P2 a2, P3 a3, P4 a4, P5 a5, P6 a6, P7 a7, P8 a8){
@@ -358,7 +358,7 @@ struct Type<FuncPtr<void(P0, P1, P2, P3, P4, P5, P6, P7, P8)> > : public TypeFun
 // callback R(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9>
 struct Type<FuncPtr<R(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> > : public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<R(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<R(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> > d = set_avoid_gc<std::function<R(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> >(mrb, v);
     return make_FuncPtr<R(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)>(d, [=](P0 a0, P1 a1, P2 a2, P3 a3, P4 a4, P5 a5, P6 a6, P7 a7, P8 a8, P9 a9){
@@ -377,7 +377,7 @@ struct Type<FuncPtr<R(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> > : public TypeFu
 // callback void(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9>
 struct Type<FuncPtr<void(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> > : public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<void(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<void(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> > d = set_avoid_gc<std::function<void(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> >(mrb, v);
     return make_FuncPtr<void(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)>(d, [=](P0 a0, P1 a1, P2 a2, P3 a3, P4 a4, P5 a5, P6 a6, P7 a7, P8 a8, P9 a9){

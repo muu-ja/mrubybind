@@ -1,6 +1,6 @@
 // This file is generated from gen_template.rb
 #define ARG(mrb, i)  Type<P##i>::get(mrb, args[i])
-#define CHECK(i)  {if(!Type<P##i>::check(args[i])) return RAISE(i);}
+#define CHECK(i)  {if(!Type<P##i>::check(mrb, args[i])) return RAISE(i);}
 #define RAISE(i)  raise(mrb, i, Type<P##i>::TYPE_NAME, args[i])
 
 

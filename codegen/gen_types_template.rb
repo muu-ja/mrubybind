@@ -4,7 +4,7 @@ MAX_PARAM = 10
 HEADER = <<EOD
 // This file is generated from gen_template.rb
 \#define ARG(mrb, i)  Type<P##i>::get(mrb, args[i])
-\#define CHECK(i)  {if(!Type<P##i>::check(args[i])) return RAISE(i);}
+\#define CHECK(i)  {if(!Type<P##i>::check(mrb, args[i])) return RAISE(i);}
 \#define RAISE(i)  raise(mrb, i, Type<P##i>::TYPE_NAME, args[i])
 
 EOD
@@ -14,7 +14,7 @@ TYPE_TMPL = <<EOD
 // callback R(%PARAMS%)
 template<class R, %CLASSES%>
 struct Type<FuncPtr<R(%PARAMS%)> > : public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<R(%PARAMS%)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<R(%PARAMS%)> > d = set_avoid_gc<std::function<R(%PARAMS%)> >(mrb, v);
     return make_FuncPtr<R(%PARAMS%)>(d, [=](%ARGS%){
@@ -33,7 +33,7 @@ struct Type<FuncPtr<R(%PARAMS%)> > : public TypeFuncBase {
 // callback void(%PARAMS%)
 template<%CLASSES%>
 struct Type<FuncPtr<void(%PARAMS%)> > : public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<void(%PARAMS%)> get(mrb_state* mrb, mrb_value v) {
     Deleter<std::function<void(%PARAMS%)> > d = set_avoid_gc<std::function<void(%PARAMS%)> >(mrb, v);
     return make_FuncPtr<void(%PARAMS%)>(d, [=](%ARGS%){

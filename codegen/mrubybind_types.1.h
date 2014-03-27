@@ -260,7 +260,7 @@ struct Type {
 template<>
 struct Type<int> {
   static const char TYPE_NAME[];
-  static int check(mrb_value v) { return mrb_fixnum_p(v) || mrb_float_p(v); }
+  static int check(mrb_state*, mrb_value v) { return mrb_fixnum_p(v) || mrb_float_p(v); }
   static int get(mrb_state* mrb, mrb_value v) { (void)mrb; return mrb_fixnum_p(v) ? mrb_fixnum(v) : mrb_float(v); }
   static mrb_value ret(mrb_state*, int i) { return mrb_fixnum_value(i); }
 };
@@ -268,7 +268,7 @@ struct Type<int> {
 template<>
 struct Type<unsigned int> {
   static const char TYPE_NAME[];
-  static int check(mrb_value v) { return mrb_fixnum_p(v) || mrb_float_p(v); }
+  static int check(mrb_state*, mrb_value v) { return mrb_fixnum_p(v) || mrb_float_p(v); }
   static unsigned int get(mrb_state* mrb, mrb_value v) { (void)mrb; return mrb_fixnum_p(v) ? mrb_fixnum(v) : mrb_float(v); }
   static mrb_value ret(mrb_state*, unsigned int i) { return mrb_fixnum_value(i); }
 };
@@ -277,7 +277,7 @@ struct Type<unsigned int> {
 template<>
 struct Type<float> {
   static const char TYPE_NAME[];
-  static int check(mrb_value v) { return mrb_float_p(v) || mrb_fixnum_p(v); }
+  static int check(mrb_state*, mrb_value v) { return mrb_float_p(v) || mrb_fixnum_p(v); }
   static float get(mrb_state* mrb, mrb_value v) { (void)mrb; return mrb_float_p(v) ? mrb_float(v) : mrb_fixnum(v); }
   static mrb_value ret(mrb_state* mrb, float f) { return mrb_float_value(mrb, f); }
 };
@@ -286,7 +286,7 @@ struct Type<float> {
 template<>
 struct Type<double> {
   static const char TYPE_NAME[];
-  static int check(mrb_value v) { return mrb_float_p(v) || mrb_fixnum_p(v); }
+  static int check(mrb_state*, mrb_value v) { return mrb_float_p(v) || mrb_fixnum_p(v); }
   static double get(mrb_state* mrb, mrb_value v) { (void)mrb; return mrb_float_p(v) ? mrb_float(v) : mrb_fixnum(v); }
   static mrb_value ret(mrb_state* mrb, double f) { return mrb_float_value(mrb, f); }
 };
@@ -295,7 +295,7 @@ struct Type<double> {
 template<>
 struct Type<const char*> {
   static const char TYPE_NAME[];
-  static int check(mrb_value v) { return mrb_string_p(v); }
+  static int check(mrb_state*, mrb_value v) { return mrb_string_p(v); }
   static const char* get(mrb_state* mrb, mrb_value v) { (void)mrb; return RSTRING_PTR(v); }
   static mrb_value ret(mrb_state* mrb, const char* s) { return mrb_str_new_cstr(mrb, s); }
 };
@@ -303,7 +303,7 @@ struct Type<const char*> {
 template<>
 struct Type<std::string> {
   static const char TYPE_NAME[];
-  static int check(mrb_value v) { return mrb_string_p(v); }
+  static int check(mrb_state*, mrb_value v) { return mrb_string_p(v); }
   static const std::string get(mrb_state* mrb, mrb_value v) { (void)mrb; return std::string(RSTRING_PTR(v), RSTRING_LEN(v)); }
   static mrb_value ret(mrb_state* mrb, const std::string& s) { return mrb_str_new(mrb, s.c_str(), s.size()); }
 };
@@ -311,7 +311,7 @@ struct Type<std::string> {
 template<>
 struct Type<const std::string> {
   static const char TYPE_NAME[];
-  static int check(mrb_value v) { return mrb_string_p(v); }
+  static int check(mrb_state*, mrb_value v) { return mrb_string_p(v); }
   static const std::string get(mrb_state* mrb, mrb_value v) { (void)mrb; return std::string(RSTRING_PTR(v), RSTRING_LEN(v)); }
   static mrb_value ret(mrb_state* mrb, const std::string& s) { return mrb_str_new(mrb, s.c_str(), s.size()); }
 };
@@ -319,7 +319,7 @@ struct Type<const std::string> {
 template<>
 struct Type<const std::string&> {
   static const char TYPE_NAME[];
-  static int check(mrb_value v) { return mrb_string_p(v); }
+  static int check(mrb_state*, mrb_value v) { return mrb_string_p(v); }
   static const std::string get(mrb_state* mrb, mrb_value v) { (void)mrb; return std::string(RSTRING_PTR(v), RSTRING_LEN(v)); }
   static mrb_value ret(mrb_state* mrb, const std::string& s) { return mrb_str_new(mrb, s.c_str(), s.size()); }
 };
@@ -328,7 +328,7 @@ struct Type<const std::string&> {
 template<>
 struct Type<bool> {
   static const char TYPE_NAME[];
-  static int check(mrb_value /*v*/) { return 1; }
+  static int check(mrb_state*, mrb_value /*v*/) { return 1; }
   static bool get(mrb_state* mrb, mrb_value v) { (void)mrb; return mrb_test(v); }
   static mrb_value ret(mrb_state* /*mrb*/, bool b) { return b ? mrb_true_value() : mrb_false_value(); }
 };
@@ -337,15 +337,9 @@ struct Type<bool> {
 template<>
 struct Type<void*> {
   static const char TYPE_NAME[];
-<<<<<<< HEAD
   static int check(mrb_value v) { return mrb_cptr_p(v); }
   static void* get(mrb_value v) { return mrb_cptr(v); }
   static mrb_value ret(mrb_state* mrb, void* p) { return mrb_cptr_value(mrb, p); }
-=======
-  static int check(mrb_value v) { return mrb_voidp_p(v); }
-  static void* get(mrb_state* mrb, mrb_value v) { (void)mrb; return mrb_voidp(v); }
-  static mrb_value ret(mrb_state* mrb, void* p) { return mrb_voidp_value(mrb, p); }
->>>>>>> call back.
 };
 
 // Function
@@ -355,7 +349,7 @@ struct TypeFuncBase{
 
 template<class R>
 struct Type<FuncPtr<R()> > :public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<R()> get(mrb_state* mrb, mrb_value v) {
       Deleter<std::function<R()> > d = set_avoid_gc<std::function<R()> >(mrb, v);
       return make_FuncPtr<R()>(d, [=](){
@@ -372,7 +366,7 @@ struct Type<FuncPtr<R()> > :public TypeFuncBase {
 
 template<>
 struct Type<FuncPtr<void()> > :public TypeFuncBase {
-  static int check(mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
+  static int check(mrb_state*, mrb_value v) { return mrb_type(v) == MRB_TT_PROC; }
   static FuncPtr<void()> get(mrb_state* mrb, mrb_value v) {
       Deleter<std::function<void()> > d = set_avoid_gc<std::function<void()> >(mrb, v);
       return make_FuncPtr<void()>(d, [=](){
@@ -391,7 +385,7 @@ struct Type<FuncPtr<void()> > :public TypeFuncBase {
 template<>
 struct Type<MrubyRef> {
   static const char TYPE_NAME[];
-  static int check(mrb_value) { return 1; }
+  static int check(mrb_state*, mrb_value) { return 1; }
   static MrubyRef get(mrb_state* mrb, mrb_value v) { (void)mrb; return MrubyRef(mrb, v); }
   static mrb_value ret(mrb_state*, MrubyRef r) { return r.get_v(); }
 };
@@ -433,8 +427,8 @@ struct TypeClassBase{
 
 template<class T> struct Type :public TypeClassBase {
     static std::string class_name;
-    static int check(mrb_value v) { 
-        return mrb_type(v) == MRB_TT_DATA; 
+    static int check(mrb_state* mrb, mrb_value v) { 
+        return mrb_type(v) == MRB_TT_DATA && strcmp(mrb_obj_classname(mrb, v), class_name.c_str()) == 0; 
     }
     static T get(mrb_state* mrb, mrb_value v) { 
             (void)mrb; return *(T*)DATA_PTR(v); 
