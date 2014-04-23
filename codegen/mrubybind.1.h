@@ -31,3 +31,6 @@
 #include "mruby/proc.h"
 #include "mruby/variable.h"
 //#include "mrubybind_types.h"
+
+#include <iostream>
+#include <vector>

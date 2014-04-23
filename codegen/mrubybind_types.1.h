@@ -9,6 +9,7 @@
 #include <functional>
 #include <memory>
 #include <map>
+#include <iostream>
 
 namespace mrubybind {
 
@@ -241,8 +242,8 @@ public:
 //===========================================================================
 // C <-> mruby type converter.
 
-template <class T>
-struct Type {
+//template <class T>
+//struct Type {
   // Type name used for error message.
   // static const char TYPE_NAME[];
 
@@ -254,7 +255,7 @@ struct Type {
 
   // Converts type T value to mrb_value.
   //static mrb_value ret(mrb_state*, T i) = 0;
-};
+//};
 
 // Fixnum
 template<>
@@ -337,8 +338,8 @@ struct Type<bool> {
 template<>
 struct Type<void*> {
   static const char TYPE_NAME[];
-  static int check(mrb_value v) { return mrb_cptr_p(v); }
-  static void* get(mrb_value v) { return mrb_cptr(v); }
+  static int check(mrb_state*, mrb_value v) { return mrb_cptr_p(v); }
+  static void* get(mrb_state*, mrb_value v) { return mrb_cptr(v); }
   static mrb_value ret(mrb_state* mrb, void* p) { return mrb_cptr_value(mrb, p); }
 };
 
@@ -419,6 +420,12 @@ struct ClassBinder {
 };
 template<class C>
 mrb_data_type ClassBinder<C>::type_info = { "???", dtor };
+
+template <class T>
+struct CustomClassBinder {
+  // Template specialization.
+  //static mrb_value call(mrb_state* mrb, void* p, mrb_value* args, int narg) = 0;
+};
 
 // Other Class
 struct TypeClassBase{

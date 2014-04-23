@@ -66,7 +66,7 @@ arena_index = 0'
 
 # Failure cases
 fail wrong_type "TypeError: can't convert String into Fixnum, argument 1(1111)"
-fail wrong_arg_num "ArgumentError: \`square': wrong number of arguments (2 for 1)"
+fail wrong_arg_num "ArgumentError: 'square': wrong number of arguments (2 for 1)"
 
 ################################################################
 # All tests succeeded.

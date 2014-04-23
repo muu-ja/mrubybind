@@ -44,18 +44,11 @@ public:
   template <class C>
   void bind_class(const char* module_name, const char* class_name) {
     struct RClass *tc = mrb_define_class(mrb_, class_name, mrb_->object_class);
-    MRB_SET_INSTANCE_TT(tc, MRB_TT_DATA);
-    mrb_value mod = mrb_obj_value(mod_);
-    if(module_name){
-        mod = mrb_obj_value(mrb_define_module(mrb_, module_name));
-    }
-    mrb_value binder = mrb_voidp_value(mrb_, (void*)ClassBinder<C*(*)(void)>::ctor);
-    mrb_value class_name_v = mrb_str_new_cstr(mrb_, class_name);
-    mrb_value new_func_ptr_v = mrb_nil_value();
-    mrb_value nparam_v = mrb_fixnum_value(0);
     Type<C>::class_name = class_name;
-    mrb_funcall(mrb_, mod_mrubybind_, "bind_class", 5, mod, binder,
-                class_name_v, new_func_ptr_v, nparam_v);
+    MRB_SET_INSTANCE_TT(tc, MRB_TT_DATA);
+    BindInstanceMethod(module_name, class_name, "initialize",
+                       mrb_cptr_value(mrb_, NULL),
+                       ClassBinder<C*(*)(void)>::ctor);
   }
   
   template <class C>
@@ -91,17 +84,18 @@ public:
   // Bind custom method.
   template <class Func>
   void bind_custom_method(const char* module_name, const char* class_name, const char* method_name, Func func_ptr) {
-    mrb_value mod = mrb_obj_value(mod_);
-    if(module_name){
-        mod = mrb_obj_value(mrb_define_module(mrb_, module_name));
-    }
-    mrb_value binder = mrb_voidp_value(mrb_, (void*)Binder<Func>::call);
-    mrb_value class_name_v = mrb_str_new_cstr(mrb_, class_name);
-    mrb_value method_name_v = mrb_str_new_cstr(mrb_, method_name);
-    mrb_value func_ptr_v = mrb_voidp_value(mrb_, reinterpret_cast<void*>(func_ptr));
-    mrb_value nparam_v = mrb_fixnum_value(Binder<Func>::NPARAM - 1);
-    mrb_funcall(mrb_, mod_mrubybind_, "bind_custom_method", 6,
-                mod, binder, class_name_v, method_name_v, func_ptr_v, nparam_v);
+    mrb_value (*binder_func)(mrb_state*, mrb_value) = CustomClassBinder<Func>::call;
+    mrb_value original_func_v = mrb_str_new(mrb_,
+                                          reinterpret_cast<char*>(&func_ptr),
+                                          sizeof(func_ptr));
+    mrb_sym method_name_s = mrb_intern_cstr(mrb_, method_name);
+    mrb_value env[] = {
+      original_func_v, // 0: c function pointer
+      mrb_symbol_value(method_name_s), // 1: method name
+    };
+    struct RProc* proc = mrb_proc_new_cfunc_with_env(mrb_, binder_func, 2, env);
+    struct RClass* klass = GetClass(module_name, class_name);
+    mrb_define_method_raw(mrb_, klass, method_name_s, proc);
   }
   
   template <class Func>
@@ -121,9 +115,14 @@ private:
 
   // Returns mruby class under a module.
   struct RClass* GetClass(const char* class_name);
+  struct RClass* GetClass(const char* module_name, const char* class_name);
 
   // Utility for binding instance method.
   void BindInstanceMethod(const char* class_name, const char* method_name,
+                          mrb_value original_func_v,
+                          mrb_value (*binder_func)(mrb_state*, mrb_value));
+  void BindInstanceMethod(const char* module_name,
+                          const char* class_name, const char* method_name,
                           mrb_value original_func_v,
                           mrb_value (*binder_func)(mrb_state*, mrb_value));
 

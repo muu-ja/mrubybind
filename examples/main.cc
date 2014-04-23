@@ -145,11 +145,15 @@ std::string call_block_a1_int(mrubybind::FuncPtr<int(int a0)> f) {
 mrubybind::FuncPtr<void()> old_f;
 
 void set_old_f(mrubybind::FuncPtr<void()> f) {
+  std::cout << "set_old_f() pre" << std::endl;
   old_f = f;
+  std::cout << "set_old_f() post" << std::endl;
 }
 
 void call_old_f() {
+  std::cout << "call_old_f() pre" << std::endl;
   old_f.func()();
+  std::cout << "call_old_f() post" << std::endl;
 }
 
 
@@ -275,6 +279,11 @@ void class_value_decriment(std::shared_ptr<ClassValue> cv)
     cv->decriment();
 }
 
+void class_value_add(std::shared_ptr<ClassValue> cv, int n)
+{
+    cv->a += n;
+}
+
 std::weak_ptr<ClassValue> convert_to_weak_class_value(std::shared_ptr<ClassValue> cv){
     return cv;
 }
@@ -297,6 +306,7 @@ void ClassPointerTest(mrb_state* mrb){
         b.bind("class_value_increment", class_value_increment);
         b.bind("class_value_get_a", class_value_get_a);
         b.bind_custom_method(NULL, "ClassValue", "decriment", class_value_decriment);
+        b.bind_custom_method(NULL, "ClassValue", "add", class_value_add);
         b.bind("convert_to_weak_class_value", convert_to_weak_class_value);
         b.bind("weak_class_value_get_a", weak_class_value_get_a);
     }
@@ -308,6 +318,8 @@ void ClassPointerTest(mrb_state* mrb){
                     "class_value_increment(cv)\n"
                     "puts \"cv -> #{class_value_get_a cv}\"\n"
                     "cv.decriment\n"
+                    "puts \"cv -> #{class_value_get_a cv}\"\n"
+                    "cv.add 4\n"
                     "puts \"cv -> #{class_value_get_a cv}\"\n"
                     "wk = convert_to_weak_class_value cv\n"
                     "puts \"wk->#{weak_class_value_get_a wk}\"\n"
