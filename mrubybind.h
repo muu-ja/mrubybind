@@ -2543,7 +2543,7 @@ public:
 
   // Bind static method.
   template <class Method>
-  void bind_static_method(const char* class_name, const char* method_name,
+  void bind_static_method(const char* module_name, const char* class_name, const char* method_name,
                           Method method_ptr) {
     mrb_sym method_name_s = mrb_intern_cstr(mrb_, method_name);
     mrb_value env[] = {
@@ -2551,8 +2551,15 @@ public:
       mrb_symbol_value(method_name_s),          // 1: method name
     };
     struct RProc* proc = mrb_proc_new_cfunc_with_env(mrb_, Binder<Method>::call, 2, env);
-    struct RClass* klass = GetClass(class_name);
+    struct RClass* klass = GetClass(module_name, class_name);
     mrb_define_class_method_raw(mrb_, klass, method_name_s, proc);
+  }
+  
+  template <class Method>
+  void bind_static_method(const char* class_name, const char* method_name,
+                          Method method_ptr) {
+    bind_static_method(NULL, class_name, method_name,
+                          method_ptr);
   }
   
   // Bind custom method.
