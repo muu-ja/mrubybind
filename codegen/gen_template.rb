@@ -25,7 +25,9 @@ struct Binder<void (*)(%PARAMS%)> {
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
     args.resize(narg);
-    ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
     if(mrb_test(block)){
       args.push_back(block);
       narg++;
@@ -49,7 +51,9 @@ struct Binder<R (*)(%PARAMS%)> {
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
     args.resize(narg);
-    ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
     if(mrb_test(block)){
       args.push_back(block);
       narg++;
@@ -75,7 +79,9 @@ struct ClassBinder<C* (*)(%PARAMS%)> {
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
     args.resize(narg);
-    ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
     if(mrb_test(block)){
       args.push_back(block);
       narg++;
@@ -106,7 +112,9 @@ struct ClassBinder<void (C::*)(%PARAMS%)> {
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
     args.resize(narg);
-    ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
     if(mrb_test(block)){
       args.push_back(block);
       narg++;
@@ -132,7 +140,9 @@ struct ClassBinder<R (C::*)(%PARAMS%)> {
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
     args.resize(narg);
-    ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
     if(mrb_test(block)){
       args.push_back(block);
       narg++;
@@ -162,7 +172,9 @@ struct CustomClassBinder<void (*)(%PARAMS%)> {
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
     args.resize(narg);
-    ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
     if(mrb_test(block)){
       args.push_back(block);
       narg++;
@@ -187,7 +199,9 @@ struct CustomClassBinder<R (*)(%PARAMS%)> {
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
     args.resize(narg);
-    ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
     if(mrb_test(block)){
       args.push_back(block);
       narg++;
