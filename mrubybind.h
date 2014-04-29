@@ -201,16 +201,16 @@ public:
     ~FuncPtr(){
 
     }
-    std::shared_ptr<std::function<T> >& ref(){
+    const std::shared_ptr<std::function<T> >& ref() const{
         return p;
     }
-    std::function<T>& func(){
+    std::function<T>& func() const{
         if(!p.get()){
             throw std::runtime_error("empty function.");
         }
         return *p.get();
     }
-    operator bool() {
+    operator bool() const {
         if(!p.get()){
             return false;
         }
