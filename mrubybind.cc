@@ -169,6 +169,10 @@ MrubyRef::~MrubyRef(){
     
 }
 
+bool MrubyRef::is_living() const{
+    return MrubyBindStatus::is_living(mrb);
+}
+
 mrb_value MrubyRef::get_v() const{
     if(v.get()){
         return *(this->v.get());
@@ -263,6 +267,11 @@ double MrubyRef::to_double() const{
     else{
         return 0.0;
     }
+}
+
+MrubyRef MrubyRef::call(std::string name){
+    MrubyArenaStore mas(mrb);
+    return MrubyRef(mrb, mrb_funcall(mrb, *(this->v.get()), name.c_str(), 0));
 }
 
 

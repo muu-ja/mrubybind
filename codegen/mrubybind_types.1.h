@@ -134,6 +134,9 @@ public:
     ~Deleter(){
 
     }
+    mrb_state* get_mrb(){
+        return mrbsp->mrb;
+    }
     void operator()(T* p) const {
         if(mrbsp.get()){
             mrb_state* mrb = mrbsp->get_mrb();
@@ -153,19 +156,23 @@ template<class T> using obj_ptr = std::shared_ptr<T>;
 //template<class T> using FuncPtr = std::shared_ptr<std::function<T> >;
 
 template<class T> class FuncPtr{
+    mrb_state* mrb;
     std::shared_ptr<std::function<T> > p;
 public:
     FuncPtr(){
 
     }
     template<class D>FuncPtr(std::function<T>* pt, D d) : p(pt, d){
-
+        mrb = d.get_mrb();
     }
     ~FuncPtr(){
 
     }
     const std::shared_ptr<std::function<T> >& ref() const{
         return p;
+    }
+    bool is_living() const{
+        return MrubyBindStatus::is_living(mrb);
     }
     std::function<T>& func() const{
         if(!p.get()){
@@ -221,6 +228,7 @@ public:
     MrubyRef(mrb_state* mrb, const mrb_value& v);
     ~MrubyRef();
     
+    bool is_living() const;
     mrb_value get_v()const;
     bool empty() const;
     bool test() const;
@@ -230,10 +238,7 @@ public:
     float to_float() const;
     double to_double() const;
     
-    MrubyRef call(std::string name){
-        MrubyArenaStore mas(mrb);
-        return MrubyRef(mrb, mrb_funcall(mrb, *(this->v.get()), name.c_str(), 0));
-    }
+    MrubyRef call(std::string name);
     
 #include "mrubybind_call_generated.h"
 
