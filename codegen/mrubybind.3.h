@@ -12,12 +12,14 @@ public:
   // Bind constant value.
   template <class T>
   void bind_const(const char* name, T v) {
+    MrubyArenaStore store(mrb_);
     mrb_define_const(mrb_, mod_, name, Type<T>::ret(mrb_, v));
   }
 
   // Bind function.
   template <class Func>
   void bind(const char* func_name, Func func_ptr) {
+    MrubyArenaStore store(mrb_);
     mrb_sym func_name_s = mrb_intern_cstr(mrb_, func_name);
     mrb_value env[] = {
       mrb_cptr_value(mrb_, (void*)func_ptr),  // 0: c function pointer
@@ -33,6 +35,7 @@ public:
   // Bind class.
   template <class Func>
   void bind_class(const char* class_name, Func new_func_ptr) {
+    MrubyArenaStore store(mrb_);
     struct RClass *tc = mrb_define_class(mrb_, class_name, mrb_->object_class);
     MRB_SET_INSTANCE_TT(tc, MRB_TT_DATA);
     BindInstanceMethod(class_name, "initialize",
@@ -43,6 +46,7 @@ public:
   // Bind class.(no new func)
   template <class C>
   void bind_class(const char* module_name, const char* class_name) {
+    MrubyArenaStore store(mrb_);
     struct RClass *tc = mrb_define_class(mrb_, class_name, mrb_->object_class);
     Type<C>::class_name = class_name;
     MRB_SET_INSTANCE_TT(tc, MRB_TT_DATA);
@@ -60,6 +64,7 @@ public:
   template <class Method>
   void bind_instance_method(const char* class_name, const char* method_name,
                             Method method_ptr) {
+    MrubyArenaStore store(mrb_);
     mrb_value method_pptr_v = mrb_str_new(mrb_,
                                           reinterpret_cast<char*>(&method_ptr),
                                           sizeof(method_ptr));
@@ -71,6 +76,7 @@ public:
   template <class Method>
   void bind_static_method(const char* module_name, const char* class_name, const char* method_name,
                           Method method_ptr) {
+    MrubyArenaStore store(mrb_);
     mrb_sym method_name_s = mrb_intern_cstr(mrb_, method_name);
     mrb_value env[] = {
       mrb_cptr_value(mrb_, (void*)method_ptr),  // 0: method pointer
@@ -91,6 +97,7 @@ public:
   // Bind custom method.
   template <class Func>
   void bind_custom_method(const char* module_name, const char* class_name, const char* method_name, Func func_ptr) {
+    MrubyArenaStore store(mrb_);
     mrb_value (*binder_func)(mrb_state*, mrb_value) = CustomClassBinder<Func>::call;
     mrb_value original_func_v = mrb_str_new(mrb_,
                                           reinterpret_cast<char*>(&func_ptr),

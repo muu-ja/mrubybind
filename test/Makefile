@@ -57,4 +57,7 @@ class_value:	class_value.o $(MRUBYBIND_OBJ)
 mruby_ref:	mruby_ref.o $(MRUBYBIND_OBJ)
 	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
     
+many_bind:	many_bind.o $(MRUBYBIND_OBJ)
+	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
+    
 #

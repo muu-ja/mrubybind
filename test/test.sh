@@ -58,6 +58,17 @@ wk->7
 GC
 ClassValue destruct.
 wk->0'
+run many_bind 'arena_index = 2
+start ClassPointerTest
+ClassValue construct.
+cv -> 7
+cv -> 8
+cv -> 7
+cv.call_block -> test7
+wk->7
+GC
+ClassValue destruct.
+wk->0'
 run mruby_ref 'mruby_ref = 3test
 mruby_ref = 3
 mruby_ref = 3toast
