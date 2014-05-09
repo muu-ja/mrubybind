@@ -47,8 +47,11 @@ public:
     }
 
     struct Data{
+        typedef std::map<std::string, std::map<std::string, bool> > ClassConvertableTable;
+    
         mrb_state* mrb;
         mrb_value avoid_gc_table;
+        ClassConvertableTable class_convertable_table;
         
         Data(){
             
@@ -63,6 +66,22 @@ public:
         
         mrb_value get_avoid_gc_table(){
             return avoid_gc_table;
+        }
+        
+        void set_class_conversion(const std::string& s, const std::string& d, bool c){
+            class_convertable_table[s][d] = c;
+        }
+        
+        bool is_convertable(const std::string& s, const std::string& d)
+        {
+            auto fs = class_convertable_table.find(s);
+            if(fs != class_convertable_table.end()){
+                auto fd = fs->second.find(d);
+                if(fd != fs->second.end()){
+                    return fd->second;
+                }
+            }
+            return false;
         }
         
     };
@@ -439,8 +458,9 @@ struct TypeClassBase{
 
 template<class T> struct Type :public TypeClassBase {
     static std::string class_name;
-    static int check(mrb_state*, mrb_value v) { 
-        return mrb_type(v) == MRB_TT_DATA; 
+    static int check(mrb_state* mrb, mrb_value v) { 
+        return mrb_type(v) == MRB_TT_DATA &&
+            MrubyBindStatus::search(mrb)->is_convertable(mrb_obj_classname(mrb, v), class_name); 
     }
     static T get(mrb_state* mrb, mrb_value v) { 
             (void)mrb; return *(T*)DATA_PTR(v); 

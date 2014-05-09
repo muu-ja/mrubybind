@@ -49,6 +49,7 @@ public:
     MrubyArenaStore store(mrb_);
     struct RClass *tc = mrb_define_class(mrb_, class_name, mrb_->object_class);
     Type<C>::class_name = class_name;
+    MrubyBindStatus::search(mrb_)->set_class_conversion(class_name, class_name, true);
     MRB_SET_INSTANCE_TT(tc, MRB_TT_DATA);
     BindInstanceMethod(module_name, class_name, "initialize",
                        mrb_cptr_value(mrb_, NULL),
@@ -115,6 +116,13 @@ public:
   template <class Func>
   void bind_custom_method(const char* class_name, const char* method_name, Func func_ptr) {
     bind_custom_method(NULL, class_name, method_name, func_ptr);
+  }
+  
+  //add convertable class pair
+  void add_convertable(const char* class_name_first, const char* class_name_second)
+  {
+    MrubyBindStatus::search(mrb_)->set_class_conversion(class_name_first, class_name_second, true);
+    MrubyBindStatus::search(mrb_)->set_class_conversion(class_name_second, class_name_first, true);
   }
 
   mrb_state* get_mrb(){

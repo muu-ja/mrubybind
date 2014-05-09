@@ -24,40 +24,43 @@ test:	$(EXES)
 mrubybind.o:	$(MRUBYBIND_SRCDIR)/mrubybind.cc
 	g++ -c -o $@ $(INC) $(CXXFLAGS) $<
 
-void:	void.o $(MRUBYBIND_OBJ)
+void:	void.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
 	g++ -o $@ $^ $(LIB)
 
-int:	int.o $(MRUBYBIND_OBJ)
+int:	int.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
 	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
 
-float:	float.o $(MRUBYBIND_OBJ)
+float:	float.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
 	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
 
-string:	string.o $(MRUBYBIND_OBJ)
+string:	string.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
 	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
 
-cptr:	cptr.o $(MRUBYBIND_OBJ)
+cptr:	cptr.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
 	g++ -o $@ $^ $(LIB)
 
-class:	class.o $(MRUBYBIND_OBJ)
+class:	class.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
 	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
 
-module:	module.o $(MRUBYBIND_OBJ)
+module:	module.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
 	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
 
-wrong_type:	wrong_type.o $(MRUBYBIND_OBJ)
+wrong_type:	wrong_type.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
 	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
 
-wrong_arg_num:	wrong_arg_num.o $(MRUBYBIND_OBJ)
+wrong_arg_num:	wrong_arg_num.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
 	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
     
-class_value:	class_value.o $(MRUBYBIND_OBJ)
+class_value:	class_value.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
 	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
 
-mruby_ref:	mruby_ref.o $(MRUBYBIND_OBJ)
+mruby_ref:	mruby_ref.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
 	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
     
-many_bind:	many_bind.o $(MRUBYBIND_OBJ)
+many_bind:	many_bind.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
+	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
+    
+class_convert:	class_convert.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
 	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
     
 #
