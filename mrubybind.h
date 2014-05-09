@@ -508,7 +508,7 @@ mrb_value raisenarg(mrb_state *mrb, mrb_value func_name, int narg, int nparam);
 #define ARG(mrb, i)  Type<P##i>::get(mrb, args[i])
 #define ARGSHIFT(mrb, i, j)  Type<P##i>::get(mrb, args[j])
 #define CHECK(i)  {if(!Type<P##i>::check(mrb, args[i])) return RAISE(i);}
-#define CHECKSHIFT(i, j)  {if(!Type<P##i>::check(mrb, args[j])) return RAISE(i);}
+#define CHECKSHIFT(i, j)  {if(!Type<P##i>::check(mrb, args[j])) return RAISE(j);}
 #define RAISE(i)  raise(mrb, i, Type<P##i>::TYPE_NAME, args[i])
 #define CHECKNARG(narg)  {if(narg != NPARAM) RAISENARG(narg);}
 #define RAISENARG(narg)  raisenarg(mrb, mrb_cfunc_env_get(mrb, 1), narg, NPARAM)
