@@ -476,8 +476,8 @@ struct TypeClassBase{
 
 template<class T> struct Type :public TypeClassBase {
     static std::string class_name;
-    static int check(mrb_state* mrb, mrb_value v) { 
-        return mrb_type(v) == MRB_TT_DATA && strcmp(mrb_obj_classname(mrb, v), class_name.c_str()) == 0; 
+    static int check(mrb_state*, mrb_value v) { 
+        return mrb_type(v) == MRB_TT_DATA; 
     }
     static T get(mrb_state* mrb, mrb_value v) { 
             (void)mrb; return *(T*)DATA_PTR(v); 
