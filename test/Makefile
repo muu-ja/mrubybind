@@ -24,43 +24,43 @@ test:	$(EXES)
 mrubybind.o:	$(MRUBYBIND_SRCDIR)/mrubybind.cc
 	g++ -c -o $@ $(INC) $(CXXFLAGS) $<
 
-void:	void.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
-	g++ -o $@ $^ $(LIB)
+void:	void.o $(MRUBYBIND_OBJ)
+	g++ -o $@ $^ $(LIB) $(INC) $(CXXFLAGS) 
 
-int:	int.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
-	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
+int:	int.o $(MRUBYBIND_OBJ)
+	g++ -o $@ $^ $(LIB) $(INC) $(CXXFLAGS) 
 
-float:	float.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
-	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
+float:	float.o $(MRUBYBIND_OBJ)
+	g++ -o $@ $^ $(LIB) $(INC) $(CXXFLAGS) 
 
-string:	string.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
-	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
+string:	string.o $(MRUBYBIND_OBJ)
+	g++ -o $@ $^ $(LIB) $(INC) $(CXXFLAGS) 
 
-cptr:	cptr.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
-	g++ -o $@ $^ $(LIB)
+cptr:	cptr.o $(MRUBYBIND_OBJ)
+	g++ -o $@ $^ $(LIB) $(INC) $(CXXFLAGS) 
 
-class:	class.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
-	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
+class:	class.o $(MRUBYBIND_OBJ)
+	g++ -o $@ $^ $(LIB) $(INC) $(CXXFLAGS) 
 
-module:	module.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
-	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
+module:	module.o $(MRUBYBIND_OBJ)
+	g++ -o $@ $^ $(LIB) $(INC) $(CXXFLAGS) 
 
-wrong_type:	wrong_type.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
-	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
+wrong_type:	wrong_type.o $(MRUBYBIND_OBJ)
+	g++ -o $@ $^ $(LIB) $(INC) $(CXXFLAGS) 
 
-wrong_arg_num:	wrong_arg_num.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
-	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
+wrong_arg_num:	wrong_arg_num.o $(MRUBYBIND_OBJ)
+	g++ -o $@ $^ $(LIB) $(INC) $(CXXFLAGS) 
     
-class_value:	class_value.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
-	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
+class_value:	class_value.o $(MRUBYBIND_OBJ)
+	g++ -o $@ $^ $(LIB) $(INC) $(CXXFLAGS) 
 
-mruby_ref:	mruby_ref.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
-	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
+mruby_ref:	mruby_ref.o $(MRUBYBIND_OBJ)
+	g++ -o $@ $^ $(LIB) $(INC) $(CXXFLAGS) 
     
-many_bind:	many_bind.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
-	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
+many_bind:	many_bind.o $(MRUBYBIND_OBJ)
+	g++ -o $@ $^ $(LIB) $(INC) $(CXXFLAGS) 
     
-class_convert:	class_convert.o $(MRUBYBIND_OBJ) $(MRUBYBIND_SRCDIR)/mrubybind.cc
-	g++ -o $@ $^ $(LIB) $(CXXFLAGS)
+class_convert:	class_convert.o $(MRUBYBIND_OBJ)
+	g++ -o $@ $^ $(LIB) $(INC) $(CXXFLAGS) 
     
 #

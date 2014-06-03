@@ -1,6 +1,6 @@
 
 
-MAX_PARAM = 10
+MAX_PARAM = 17
 
 HEADER = <<EOD
 // This file is generated from gen_template.rb
