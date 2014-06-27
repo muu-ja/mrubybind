@@ -38,6 +38,7 @@ int main() {
     b.bind("create_v", create_v);
     b.bind("add_v", add_v);
     b.bind("v_a", v_a);
+    b.bind_custom_method("V", "a", v_a);
   }
 
   int result_code = EXIT_SUCCESS;
@@ -47,7 +48,7 @@ int main() {
                   "add_v v\n"
                   "puts \"v_a = #{v_a v}\"\n"
                   "add_v v\n"
-                  "puts \"v_a = #{v_a v}\"\n"
+                  "puts \"v_a = #{v.a}\"\n"
                   );
   if (mrb->exc) {
     mrb_p(mrb, mrb_obj_value(mrb->exc));

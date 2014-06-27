@@ -894,6 +894,63 @@ struct CustomClassBinder<R (*)(P0)> {
 };
 
 
+
+// custom method
+template<class P0>
+struct CustomClassBinder<void (*)(P0&)> {
+  static const int NPARAM = 1 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef void (*M)(P0&);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    mp(*instance);
+    return mrb_nil_value();
+  }
+};
+
+template<class R, class P0>
+struct CustomClassBinder<R (*)(P0&)> {
+  static const int NPARAM = 1 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef R (*M)(P0&);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    R result = mp(*instance);
+    return Type<R>::ret(mrb, result);
+  }
+};
+
+
 // void f(P0, P1);
 template<class P0, class P1>
 struct Binder<void (*)(P0, P1)> {
@@ -1084,6 +1141,63 @@ struct CustomClassBinder<R (*)(P0, P1)> {
     P0* instance = static_cast<P0*>(DATA_PTR(self));
     mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
     typedef R (*M)(P0, P1);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    R result = mp(*instance, ARGSHIFT(mrb, 1, 0));
+    return Type<R>::ret(mrb, result);
+  }
+};
+
+
+
+// custom method
+template<class P0, class P1>
+struct CustomClassBinder<void (*)(P0&, P1)> {
+  static const int NPARAM = 2 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef void (*M)(P0&, P1);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    mp(*instance, ARGSHIFT(mrb, 1, 0));
+    return mrb_nil_value();
+  }
+};
+
+template<class R, class P0, class P1>
+struct CustomClassBinder<R (*)(P0&, P1)> {
+  static const int NPARAM = 2 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef R (*M)(P0&, P1);
     M mp = *(M*)RSTRING_PTR(cmethod);
     R result = mp(*instance, ARGSHIFT(mrb, 1, 0));
     return Type<R>::ret(mrb, result);
@@ -1288,6 +1402,63 @@ struct CustomClassBinder<R (*)(P0, P1, P2)> {
 };
 
 
+
+// custom method
+template<class P0, class P1, class P2>
+struct CustomClassBinder<void (*)(P0&, P1, P2)> {
+  static const int NPARAM = 3 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef void (*M)(P0&, P1, P2);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1));
+    return mrb_nil_value();
+  }
+};
+
+template<class R, class P0, class P1, class P2>
+struct CustomClassBinder<R (*)(P0&, P1, P2)> {
+  static const int NPARAM = 3 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef R (*M)(P0&, P1, P2);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    R result = mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1));
+    return Type<R>::ret(mrb, result);
+  }
+};
+
+
 // void f(P0, P1, P2, P3);
 template<class P0, class P1, class P2, class P3>
 struct Binder<void (*)(P0, P1, P2, P3)> {
@@ -1478,6 +1649,63 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3)> {
     P0* instance = static_cast<P0*>(DATA_PTR(self));
     mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
     typedef R (*M)(P0, P1, P2, P3);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    R result = mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2));
+    return Type<R>::ret(mrb, result);
+  }
+};
+
+
+
+// custom method
+template<class P0, class P1, class P2, class P3>
+struct CustomClassBinder<void (*)(P0&, P1, P2, P3)> {
+  static const int NPARAM = 4 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef void (*M)(P0&, P1, P2, P3);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2));
+    return mrb_nil_value();
+  }
+};
+
+template<class R, class P0, class P1, class P2, class P3>
+struct CustomClassBinder<R (*)(P0&, P1, P2, P3)> {
+  static const int NPARAM = 4 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef R (*M)(P0&, P1, P2, P3);
     M mp = *(M*)RSTRING_PTR(cmethod);
     R result = mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2));
     return Type<R>::ret(mrb, result);
@@ -1682,6 +1910,63 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4)> {
 };
 
 
+
+// custom method
+template<class P0, class P1, class P2, class P3, class P4>
+struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4)> {
+  static const int NPARAM = 5 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef void (*M)(P0&, P1, P2, P3, P4);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3));
+    return mrb_nil_value();
+  }
+};
+
+template<class R, class P0, class P1, class P2, class P3, class P4>
+struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4)> {
+  static const int NPARAM = 5 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef R (*M)(P0&, P1, P2, P3, P4);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    R result = mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3));
+    return Type<R>::ret(mrb, result);
+  }
+};
+
+
 // void f(P0, P1, P2, P3, P4, P5);
 template<class P0, class P1, class P2, class P3, class P4, class P5>
 struct Binder<void (*)(P0, P1, P2, P3, P4, P5)> {
@@ -1872,6 +2157,63 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5)> {
     P0* instance = static_cast<P0*>(DATA_PTR(self));
     mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
     typedef R (*M)(P0, P1, P2, P3, P4, P5);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    R result = mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4));
+    return Type<R>::ret(mrb, result);
+  }
+};
+
+
+
+// custom method
+template<class P0, class P1, class P2, class P3, class P4, class P5>
+struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5)> {
+  static const int NPARAM = 6 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef void (*M)(P0&, P1, P2, P3, P4, P5);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4));
+    return mrb_nil_value();
+  }
+};
+
+template<class R, class P0, class P1, class P2, class P3, class P4, class P5>
+struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5)> {
+  static const int NPARAM = 6 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef R (*M)(P0&, P1, P2, P3, P4, P5);
     M mp = *(M*)RSTRING_PTR(cmethod);
     R result = mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4));
     return Type<R>::ret(mrb, result);
@@ -2076,6 +2418,63 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6)> {
 };
 
 
+
+// custom method
+template<class P0, class P1, class P2, class P3, class P4, class P5, class P6>
+struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6)> {
+  static const int NPARAM = 7 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4); CHECKSHIFT(6, 5);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef void (*M)(P0&, P1, P2, P3, P4, P5, P6);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5));
+    return mrb_nil_value();
+  }
+};
+
+template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6>
+struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6)> {
+  static const int NPARAM = 7 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4); CHECKSHIFT(6, 5);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef R (*M)(P0&, P1, P2, P3, P4, P5, P6);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    R result = mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5));
+    return Type<R>::ret(mrb, result);
+  }
+};
+
+
 // void f(P0, P1, P2, P3, P4, P5, P6, P7);
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7>
 struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7)> {
@@ -2266,6 +2665,63 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7)> {
     P0* instance = static_cast<P0*>(DATA_PTR(self));
     mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
     typedef R (*M)(P0, P1, P2, P3, P4, P5, P6, P7);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    R result = mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6));
+    return Type<R>::ret(mrb, result);
+  }
+};
+
+
+
+// custom method
+template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7>
+struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7)> {
+  static const int NPARAM = 8 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4); CHECKSHIFT(6, 5); CHECKSHIFT(7, 6);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef void (*M)(P0&, P1, P2, P3, P4, P5, P6, P7);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6));
+    return mrb_nil_value();
+  }
+};
+
+template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7>
+struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7)> {
+  static const int NPARAM = 8 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4); CHECKSHIFT(6, 5); CHECKSHIFT(7, 6);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef R (*M)(P0&, P1, P2, P3, P4, P5, P6, P7);
     M mp = *(M*)RSTRING_PTR(cmethod);
     R result = mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6));
     return Type<R>::ret(mrb, result);
@@ -2470,6 +2926,63 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8)> {
 };
 
 
+
+// custom method
+template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8>
+struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8)> {
+  static const int NPARAM = 9 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4); CHECKSHIFT(6, 5); CHECKSHIFT(7, 6); CHECKSHIFT(8, 7);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef void (*M)(P0&, P1, P2, P3, P4, P5, P6, P7, P8);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6), ARGSHIFT(mrb, 8, 7));
+    return mrb_nil_value();
+  }
+};
+
+template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8>
+struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8)> {
+  static const int NPARAM = 9 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4); CHECKSHIFT(6, 5); CHECKSHIFT(7, 6); CHECKSHIFT(8, 7);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef R (*M)(P0&, P1, P2, P3, P4, P5, P6, P7, P8);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    R result = mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6), ARGSHIFT(mrb, 8, 7));
+    return Type<R>::ret(mrb, result);
+  }
+};
+
+
 // void f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9);
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9>
 struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
@@ -2660,6 +3173,63 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
     P0* instance = static_cast<P0*>(DATA_PTR(self));
     mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
     typedef R (*M)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    R result = mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6), ARGSHIFT(mrb, 8, 7), ARGSHIFT(mrb, 9, 8));
+    return Type<R>::ret(mrb, result);
+  }
+};
+
+
+
+// custom method
+template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9>
+struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
+  static const int NPARAM = 10 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4); CHECKSHIFT(6, 5); CHECKSHIFT(7, 6); CHECKSHIFT(8, 7); CHECKSHIFT(9, 8);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef void (*M)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6), ARGSHIFT(mrb, 8, 7), ARGSHIFT(mrb, 9, 8));
+    return mrb_nil_value();
+  }
+};
+
+template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9>
+struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
+  static const int NPARAM = 10 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4); CHECKSHIFT(6, 5); CHECKSHIFT(7, 6); CHECKSHIFT(8, 7); CHECKSHIFT(9, 8);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef R (*M)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9);
     M mp = *(M*)RSTRING_PTR(cmethod);
     R result = mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6), ARGSHIFT(mrb, 8, 7), ARGSHIFT(mrb, 9, 8));
     return Type<R>::ret(mrb, result);
@@ -2864,6 +3434,63 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)> {
 };
 
 
+
+// custom method
+template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10>
+struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)> {
+  static const int NPARAM = 11 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4); CHECKSHIFT(6, 5); CHECKSHIFT(7, 6); CHECKSHIFT(8, 7); CHECKSHIFT(9, 8); CHECKSHIFT(10, 9);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef void (*M)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6), ARGSHIFT(mrb, 8, 7), ARGSHIFT(mrb, 9, 8), ARGSHIFT(mrb, 10, 9));
+    return mrb_nil_value();
+  }
+};
+
+template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10>
+struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)> {
+  static const int NPARAM = 11 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4); CHECKSHIFT(6, 5); CHECKSHIFT(7, 6); CHECKSHIFT(8, 7); CHECKSHIFT(9, 8); CHECKSHIFT(10, 9);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef R (*M)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    R result = mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6), ARGSHIFT(mrb, 8, 7), ARGSHIFT(mrb, 9, 8), ARGSHIFT(mrb, 10, 9));
+    return Type<R>::ret(mrb, result);
+  }
+};
+
+
 // void f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11);
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11>
 struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)> {
@@ -3054,6 +3681,63 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)
     P0* instance = static_cast<P0*>(DATA_PTR(self));
     mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
     typedef R (*M)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    R result = mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6), ARGSHIFT(mrb, 8, 7), ARGSHIFT(mrb, 9, 8), ARGSHIFT(mrb, 10, 9), ARGSHIFT(mrb, 11, 10));
+    return Type<R>::ret(mrb, result);
+  }
+};
+
+
+
+// custom method
+template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11>
+struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)> {
+  static const int NPARAM = 12 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4); CHECKSHIFT(6, 5); CHECKSHIFT(7, 6); CHECKSHIFT(8, 7); CHECKSHIFT(9, 8); CHECKSHIFT(10, 9); CHECKSHIFT(11, 10);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef void (*M)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6), ARGSHIFT(mrb, 8, 7), ARGSHIFT(mrb, 9, 8), ARGSHIFT(mrb, 10, 9), ARGSHIFT(mrb, 11, 10));
+    return mrb_nil_value();
+  }
+};
+
+template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11>
+struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)> {
+  static const int NPARAM = 12 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4); CHECKSHIFT(6, 5); CHECKSHIFT(7, 6); CHECKSHIFT(8, 7); CHECKSHIFT(9, 8); CHECKSHIFT(10, 9); CHECKSHIFT(11, 10);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef R (*M)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11);
     M mp = *(M*)RSTRING_PTR(cmethod);
     R result = mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6), ARGSHIFT(mrb, 8, 7), ARGSHIFT(mrb, 9, 8), ARGSHIFT(mrb, 10, 9), ARGSHIFT(mrb, 11, 10));
     return Type<R>::ret(mrb, result);
@@ -3258,6 +3942,63 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11,
 };
 
 
+
+// custom method
+template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12>
+struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)> {
+  static const int NPARAM = 13 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4); CHECKSHIFT(6, 5); CHECKSHIFT(7, 6); CHECKSHIFT(8, 7); CHECKSHIFT(9, 8); CHECKSHIFT(10, 9); CHECKSHIFT(11, 10); CHECKSHIFT(12, 11);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef void (*M)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6), ARGSHIFT(mrb, 8, 7), ARGSHIFT(mrb, 9, 8), ARGSHIFT(mrb, 10, 9), ARGSHIFT(mrb, 11, 10), ARGSHIFT(mrb, 12, 11));
+    return mrb_nil_value();
+  }
+};
+
+template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12>
+struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)> {
+  static const int NPARAM = 13 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4); CHECKSHIFT(6, 5); CHECKSHIFT(7, 6); CHECKSHIFT(8, 7); CHECKSHIFT(9, 8); CHECKSHIFT(10, 9); CHECKSHIFT(11, 10); CHECKSHIFT(12, 11);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef R (*M)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    R result = mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6), ARGSHIFT(mrb, 8, 7), ARGSHIFT(mrb, 9, 8), ARGSHIFT(mrb, 10, 9), ARGSHIFT(mrb, 11, 10), ARGSHIFT(mrb, 12, 11));
+    return Type<R>::ret(mrb, result);
+  }
+};
+
+
 // void f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13);
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13>
 struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)> {
@@ -3448,6 +4189,63 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11,
     P0* instance = static_cast<P0*>(DATA_PTR(self));
     mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
     typedef R (*M)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    R result = mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6), ARGSHIFT(mrb, 8, 7), ARGSHIFT(mrb, 9, 8), ARGSHIFT(mrb, 10, 9), ARGSHIFT(mrb, 11, 10), ARGSHIFT(mrb, 12, 11), ARGSHIFT(mrb, 13, 12));
+    return Type<R>::ret(mrb, result);
+  }
+};
+
+
+
+// custom method
+template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13>
+struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)> {
+  static const int NPARAM = 14 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4); CHECKSHIFT(6, 5); CHECKSHIFT(7, 6); CHECKSHIFT(8, 7); CHECKSHIFT(9, 8); CHECKSHIFT(10, 9); CHECKSHIFT(11, 10); CHECKSHIFT(12, 11); CHECKSHIFT(13, 12);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef void (*M)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6), ARGSHIFT(mrb, 8, 7), ARGSHIFT(mrb, 9, 8), ARGSHIFT(mrb, 10, 9), ARGSHIFT(mrb, 11, 10), ARGSHIFT(mrb, 12, 11), ARGSHIFT(mrb, 13, 12));
+    return mrb_nil_value();
+  }
+};
+
+template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13>
+struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)> {
+  static const int NPARAM = 14 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4); CHECKSHIFT(6, 5); CHECKSHIFT(7, 6); CHECKSHIFT(8, 7); CHECKSHIFT(9, 8); CHECKSHIFT(10, 9); CHECKSHIFT(11, 10); CHECKSHIFT(12, 11); CHECKSHIFT(13, 12);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef R (*M)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13);
     M mp = *(M*)RSTRING_PTR(cmethod);
     R result = mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6), ARGSHIFT(mrb, 8, 7), ARGSHIFT(mrb, 9, 8), ARGSHIFT(mrb, 10, 9), ARGSHIFT(mrb, 11, 10), ARGSHIFT(mrb, 12, 11), ARGSHIFT(mrb, 13, 12));
     return Type<R>::ret(mrb, result);
@@ -3652,6 +4450,63 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11,
 };
 
 
+
+// custom method
+template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14>
+struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)> {
+  static const int NPARAM = 15 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4); CHECKSHIFT(6, 5); CHECKSHIFT(7, 6); CHECKSHIFT(8, 7); CHECKSHIFT(9, 8); CHECKSHIFT(10, 9); CHECKSHIFT(11, 10); CHECKSHIFT(12, 11); CHECKSHIFT(13, 12); CHECKSHIFT(14, 13);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef void (*M)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6), ARGSHIFT(mrb, 8, 7), ARGSHIFT(mrb, 9, 8), ARGSHIFT(mrb, 10, 9), ARGSHIFT(mrb, 11, 10), ARGSHIFT(mrb, 12, 11), ARGSHIFT(mrb, 13, 12), ARGSHIFT(mrb, 14, 13));
+    return mrb_nil_value();
+  }
+};
+
+template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14>
+struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)> {
+  static const int NPARAM = 15 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4); CHECKSHIFT(6, 5); CHECKSHIFT(7, 6); CHECKSHIFT(8, 7); CHECKSHIFT(9, 8); CHECKSHIFT(10, 9); CHECKSHIFT(11, 10); CHECKSHIFT(12, 11); CHECKSHIFT(13, 12); CHECKSHIFT(14, 13);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef R (*M)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    R result = mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6), ARGSHIFT(mrb, 8, 7), ARGSHIFT(mrb, 9, 8), ARGSHIFT(mrb, 10, 9), ARGSHIFT(mrb, 11, 10), ARGSHIFT(mrb, 12, 11), ARGSHIFT(mrb, 13, 12), ARGSHIFT(mrb, 14, 13));
+    return Type<R>::ret(mrb, result);
+  }
+};
+
+
 // void f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15);
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15>
 struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)> {
@@ -3849,6 +4704,63 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11,
 };
 
 
+
+// custom method
+template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15>
+struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)> {
+  static const int NPARAM = 16 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4); CHECKSHIFT(6, 5); CHECKSHIFT(7, 6); CHECKSHIFT(8, 7); CHECKSHIFT(9, 8); CHECKSHIFT(10, 9); CHECKSHIFT(11, 10); CHECKSHIFT(12, 11); CHECKSHIFT(13, 12); CHECKSHIFT(14, 13); CHECKSHIFT(15, 14);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef void (*M)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6), ARGSHIFT(mrb, 8, 7), ARGSHIFT(mrb, 9, 8), ARGSHIFT(mrb, 10, 9), ARGSHIFT(mrb, 11, 10), ARGSHIFT(mrb, 12, 11), ARGSHIFT(mrb, 13, 12), ARGSHIFT(mrb, 14, 13), ARGSHIFT(mrb, 15, 14));
+    return mrb_nil_value();
+  }
+};
+
+template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15>
+struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)> {
+  static const int NPARAM = 16 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4); CHECKSHIFT(6, 5); CHECKSHIFT(7, 6); CHECKSHIFT(8, 7); CHECKSHIFT(9, 8); CHECKSHIFT(10, 9); CHECKSHIFT(11, 10); CHECKSHIFT(12, 11); CHECKSHIFT(13, 12); CHECKSHIFT(14, 13); CHECKSHIFT(15, 14);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef R (*M)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    R result = mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6), ARGSHIFT(mrb, 8, 7), ARGSHIFT(mrb, 9, 8), ARGSHIFT(mrb, 10, 9), ARGSHIFT(mrb, 11, 10), ARGSHIFT(mrb, 12, 11), ARGSHIFT(mrb, 13, 12), ARGSHIFT(mrb, 14, 13), ARGSHIFT(mrb, 15, 14));
+    return Type<R>::ret(mrb, result);
+  }
+};
+
+
 // void f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16);
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15, class P16>
 struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)> {
@@ -4039,6 +4951,63 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11,
     P0* instance = static_cast<P0*>(DATA_PTR(self));
     mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
     typedef R (*M)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    R result = mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6), ARGSHIFT(mrb, 8, 7), ARGSHIFT(mrb, 9, 8), ARGSHIFT(mrb, 10, 9), ARGSHIFT(mrb, 11, 10), ARGSHIFT(mrb, 12, 11), ARGSHIFT(mrb, 13, 12), ARGSHIFT(mrb, 14, 13), ARGSHIFT(mrb, 15, 14), ARGSHIFT(mrb, 16, 15));
+    return Type<R>::ret(mrb, result);
+  }
+};
+
+
+
+// custom method
+template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15, class P16>
+struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)> {
+  static const int NPARAM = 17 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4); CHECKSHIFT(6, 5); CHECKSHIFT(7, 6); CHECKSHIFT(8, 7); CHECKSHIFT(9, 8); CHECKSHIFT(10, 9); CHECKSHIFT(11, 10); CHECKSHIFT(12, 11); CHECKSHIFT(13, 12); CHECKSHIFT(14, 13); CHECKSHIFT(15, 14); CHECKSHIFT(16, 15);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef void (*M)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16);
+    M mp = *(M*)RSTRING_PTR(cmethod);
+    mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6), ARGSHIFT(mrb, 8, 7), ARGSHIFT(mrb, 9, 8), ARGSHIFT(mrb, 10, 9), ARGSHIFT(mrb, 11, 10), ARGSHIFT(mrb, 12, 11), ARGSHIFT(mrb, 13, 12), ARGSHIFT(mrb, 14, 13), ARGSHIFT(mrb, 15, 14), ARGSHIFT(mrb, 16, 15));
+    return mrb_nil_value();
+  }
+};
+
+template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15, class P16>
+struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)> {
+  static const int NPARAM = 17 - 1;
+  static mrb_value call(mrb_state* mrb, mrb_value self) {
+    mrb_value* targs;
+    int narg;
+    mrb_value block = mrb_nil_value();
+    std::vector<mrb_value> args;
+    mrb_get_args(mrb, "*|&", &targs, &narg, &block);
+    args.resize(narg);
+    if(narg > 0){
+      ::memmove(&args[0], &targs[0], narg * sizeof(mrb_value));
+    }
+    if(mrb_test(block)){
+      args.push_back(block);
+      narg++;
+    }
+    CHECKNARG(narg); CHECKSHIFT(1, 0); CHECKSHIFT(2, 1); CHECKSHIFT(3, 2); CHECKSHIFT(4, 3); CHECKSHIFT(5, 4); CHECKSHIFT(6, 5); CHECKSHIFT(7, 6); CHECKSHIFT(8, 7); CHECKSHIFT(9, 8); CHECKSHIFT(10, 9); CHECKSHIFT(11, 10); CHECKSHIFT(12, 11); CHECKSHIFT(13, 12); CHECKSHIFT(14, 13); CHECKSHIFT(15, 14); CHECKSHIFT(16, 15);
+    P0* instance = static_cast<P0*>(DATA_PTR(self));
+    mrb_value cmethod = mrb_cfunc_env_get(mrb, 0);
+    typedef R (*M)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16);
     M mp = *(M*)RSTRING_PTR(cmethod);
     R result = mp(*instance, ARGSHIFT(mrb, 1, 0), ARGSHIFT(mrb, 2, 1), ARGSHIFT(mrb, 3, 2), ARGSHIFT(mrb, 4, 3), ARGSHIFT(mrb, 5, 4), ARGSHIFT(mrb, 6, 5), ARGSHIFT(mrb, 7, 6), ARGSHIFT(mrb, 8, 7), ARGSHIFT(mrb, 9, 8), ARGSHIFT(mrb, 10, 9), ARGSHIFT(mrb, 11, 10), ARGSHIFT(mrb, 12, 11), ARGSHIFT(mrb, 13, 12), ARGSHIFT(mrb, 14, 13), ARGSHIFT(mrb, 15, 14), ARGSHIFT(mrb, 16, 15));
     return Type<R>::ret(mrb, result);

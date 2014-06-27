@@ -271,8 +271,34 @@ def embed_template_custom(str, nparam)
     '%CLASSES1%' => classes.empty? ? '' : ', ' + classes,
     '%ASSERTS%' => 'CHECKNARG(narg);' + asserts
   }
+  
+  ts = str.gsub(/(#{table.keys.join('|')})/) {|k| table[k]}
+  
+  if nparam == 0
+    params = 'void'
+    args = ''
+    classes = ''
+    asserts = ''
+  else
+    params = (0...nparam).map {|i| (i == 0) ? "P#{i}&" : "P#{i}"}.join(', ')
+    args = (1...nparam).map {|i| "ARGSHIFT(mrb, #{i}, #{i - 1})"}.join(', ')
+    classes = (0...nparam).map {|i| "class P#{i}"}.join(', ')
+    asserts = (1...nparam).map {|i| " CHECKSHIFT(#{i}, #{i - 1});"}.join('')
+  end
 
-  return str.gsub(/(#{table.keys.join('|')})/) {|k| table[k]}
+  table = {
+    '%PARAMS%' => params,
+    '%NPARAM%' => nparam.to_s,
+    '%ARGS%' => args,
+    '%ARGS1%' => args.empty? ? '' : ', ' + args,
+    '%CLASSES0%' => classes,
+    '%CLASSES1%' => classes.empty? ? '' : ', ' + classes,
+    '%ASSERTS%' => 'CHECKNARG(narg);' + asserts
+  }
+  
+  ts += str.gsub(/(#{table.keys.join('|')})/) {|k| table[k]}
+
+  return ts
 end
 
 print HEADER
