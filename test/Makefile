@@ -63,4 +63,6 @@ many_bind:	many_bind.o $(MRUBYBIND_OBJ)
 class_convert:	class_convert.o $(MRUBYBIND_OBJ)
 	g++ -o $@ $^ $(LIB) $(INC) $(CXXFLAGS) 
     
+reference:	reference.o $(MRUBYBIND_OBJ)
+	g++ -o $@ $^ $(LIB) $(INC) $(CXXFLAGS) 
 #

@@ -49,6 +49,7 @@ public:
     MrubyArenaStore store(mrb_);
     struct RClass *tc = mrb_define_class(mrb_, class_name, mrb_->object_class);
     Type<C>::class_name = class_name;
+    Type<C&>::class_name = class_name;
     MrubyBindStatus::search(mrb_)->set_class_conversion(class_name, class_name, true);
     MRB_SET_INSTANCE_TT(tc, MRB_TT_DATA);
     BindInstanceMethod(module_name, class_name, "initialize",

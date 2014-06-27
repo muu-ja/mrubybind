@@ -456,6 +456,30 @@ struct TypeClassBase{
     static const char TYPE_NAME[];
 };
 
+template<class T> struct Type<T&> :public TypeClassBase {
+    static std::string class_name;
+    static int check(mrb_state* mrb, mrb_value v) {
+        return mrb_type(v) == MRB_TT_DATA &&
+            MrubyBindStatus::search(mrb)->is_convertable(mrb_obj_classname(mrb, v), class_name);
+    }
+    static T& get(mrb_state* mrb, mrb_value v) {
+        (void)mrb; return *(T*)DATA_PTR(v);
+    }
+    static mrb_value ret(mrb_state* mrb, T t) {
+        RClass* cls;
+        mrb_value v;
+        cls = mrb_class_get(mrb, class_name.c_str());
+        v = mrb_class_new_instance(mrb, 0, NULL, cls);
+        DATA_TYPE(v) = &ClassBinder<T>::type_info;
+        T* nt = new T();
+        *nt = t;
+        DATA_PTR(v) = nt;
+        return v;
+    }
+};
+
+template<class T> std::string Type<T&>::class_name = "";
+
 template<class T> struct Type :public TypeClassBase {
     static std::string class_name;
     static int check(mrb_state* mrb, mrb_value v) { 
