@@ -65,4 +65,8 @@ class_convert:	class_convert.o $(MRUBYBIND_OBJ)
     
 reference:	reference.o $(MRUBYBIND_OBJ)
 	g++ -o $@ $^ $(LIB) $(INC) $(CXXFLAGS) 
+    
+avoid_gc:	avoid_gc.o $(MRUBYBIND_OBJ)
+	g++ -o $@ $^ $(LIB) $(INC) $(CXXFLAGS) 
+    
 #

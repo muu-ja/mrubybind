@@ -77,6 +77,9 @@ arena_index = 0'
 run reference 'start ReferenceTest
 v_a = 1
 v_a = 2'
+run avoid_gc 'start avoid_gc
+called!'
+
 
 # Failure cases
 fail wrong_type "TypeError: can't convert String into Fixnum, argument 1(1111)"
