@@ -178,7 +178,9 @@ public:
     Deleter(mrb_state* mrb, mrb_value v){
         mrbsp = MrubyBindStatus::search(mrb);
         mrb_value avoid_gc_table = mrbsp->get_avoid_gc_table();
-        mrb_value s = mrb_hash_get(mrb, avoid_gc_table, v);
+        mrb_int v_id = mrb_obj_id(v);
+        mrb_value id = mrb_fixnum_value(v_id);
+        mrb_value s = mrb_hash_get(mrb, avoid_gc_table, id);
         if(mrb_test(s)){
             mrb_value a = s;
             mrb_value nv = mrb_ary_ref(mrb, a, 1);
@@ -191,7 +193,7 @@ public:
             mrb_ary_push(mrb, a, v);
             mrb_ary_push(mrb, a, mrb_fixnum_value(1));
             s = a;
-            mrb_hash_set(mrb, avoid_gc_table, v, s);
+            mrb_hash_set(mrb, avoid_gc_table, id, s);
         }
         v_ = v;
     }
@@ -206,13 +208,15 @@ public:
             mrb_state* mrb = mrbsp->get_mrb();
             if(mrb){
                 mrb_value avoid_gc_table = mrbsp->get_avoid_gc_table();
-                mrb_value a = mrb_hash_get(mrb, avoid_gc_table, v_);
+                mrb_int v_id = mrb_obj_id(v_);
+                mrb_value id = mrb_fixnum_value(v_id);
+                mrb_value a = mrb_hash_get(mrb, avoid_gc_table, id);
                 mrb_value nv = mrb_ary_ref(mrb, a, 1);
                 mrb_int n = mrb_fixnum(nv);
                 n--;
                 if(n <= 0)
                 {
-                    mrb_hash_delete_key(mrb, avoid_gc_table, v_);
+                    mrb_hash_delete_key(mrb, avoid_gc_table, id);
                 }
                 else
                 {
