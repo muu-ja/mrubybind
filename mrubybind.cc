@@ -80,7 +80,7 @@ void MrubyBind::Initialize() {
     mrb_const_set(mrb_, mrb_obj_value(mrb_->kernel_module), sym_mrubybind, mrb_obj_value(mrubybind));
     
     {
-        avoid_gc_table_ = mrb_hash_new(mrb_);
+        avoid_gc_table_ = mrb_ary_new(mrb_);
         mrb_obj_iv_set(mrb_, (RObject*)mrubybind,
                    mrb_intern_cstr(mrb_, untouchable_table), avoid_gc_table_);
         std::shared_ptr<MrubyBindStatus> mrbs = std::make_shared<MrubyBindStatus>(mrb_, avoid_gc_table_);

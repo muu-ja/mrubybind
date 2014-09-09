@@ -78,7 +78,10 @@ run reference 'start ReferenceTest
 v_a = 1
 v_a = 2'
 run avoid_gc 'start avoid_gc
-called!'
+called!
+start avoid_gc 2
+called!
+block called!'
 
 
 # Failure cases

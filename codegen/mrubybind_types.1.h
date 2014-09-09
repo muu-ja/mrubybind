@@ -41,6 +41,26 @@ public:
     typedef std::shared_ptr<Data> Data_ptr;
     typedef std::map<mrb_state*, Data_ptr > Table;
     
+    struct ObjectInfo
+    {
+        size_t ref_count; 
+        size_t id;
+        
+        ObjectInfo()
+        {
+            this->ref_count = 0;
+            this->id = 0;
+        }
+        
+        ObjectInfo(size_t id)
+        {
+            this->ref_count = 1;
+            this->id = id;
+        }
+    };
+    typedef std::map<RBasic*, ObjectInfo> ObjectIdTable;
+    typedef std::vector<size_t> FreeIdArray;
+    
     static Table& get_living_table(){
         static Table table;
         return table;
@@ -48,10 +68,13 @@ public:
 
     struct Data{
         typedef std::map<std::string, std::map<std::string, bool> > ClassConvertableTable;
+        
     
         mrb_state* mrb;
         mrb_value avoid_gc_table;
         ClassConvertableTable class_convertable_table;
+        ObjectIdTable object_id_table;
+        FreeIdArray free_id_array;
         
         Data(){
             
@@ -66,6 +89,21 @@ public:
         
         mrb_value get_avoid_gc_table(){
             return avoid_gc_table;
+        }
+        
+        size_t new_id()
+        {
+            return mrb_ary_len(mrb, avoid_gc_table);
+        }
+        
+        ObjectIdTable& get_object_id_table()
+        {
+            return object_id_table;
+        }
+        
+        FreeIdArray& get_free_id_array()
+        {
+            return free_id_array;
         }
         
         void set_class_conversion(const std::string& s, const std::string& d, bool c){
@@ -139,26 +177,35 @@ public:
     }
 
     Deleter(mrb_state* mrb, mrb_value v){
-        mrbsp = MrubyBindStatus::search(mrb);
-        mrb_value avoid_gc_table = mrbsp->get_avoid_gc_table();
-        mrb_int v_id = mrb_obj_id(v);
-        mrb_value id = mrb_fixnum_value(v_id);
-        mrb_value s = mrb_hash_get(mrb, avoid_gc_table, id);
-        if(mrb_test(s)){
-            mrb_value a = s;
-            mrb_value nv = mrb_ary_ref(mrb, a, 1);
-            mrb_int n = mrb_fixnum(nv);
-            n++;
-            mrb_ary_set(mrb, a, 1, mrb_fixnum_value(n));
-        }
-        else{
-            mrb_value a = mrb_ary_new(mrb);
-            mrb_ary_push(mrb, a, v);
-            mrb_ary_push(mrb, a, mrb_fixnum_value(1));
-            s = a;
-            mrb_hash_set(mrb, avoid_gc_table, id, s);
+        if(!mrb_immediate_p(v))
+        {
+            mrbsp = MrubyBindStatus::search(mrb);
+            mrb_value avoid_gc_table = mrbsp->get_avoid_gc_table();
+            auto& object_id_table = mrbsp->get_object_id_table();
+            auto& free_id_array = mrbsp->get_free_id_array();
+            if(object_id_table.find(mrb_basic_ptr(v)) == object_id_table.end())
+            {
+                size_t new_id;
+                if(!free_id_array.empty())
+                {
+                    new_id = free_id_array.back();
+                    free_id_array.pop_back();
+                    mrb_ary_set(mrb, avoid_gc_table, (mrb_int)new_id, v);
+                }
+                else
+                {
+                    new_id = mrbsp->new_id();
+                    mrb_ary_push(mrb, avoid_gc_table, v);
+                }
+                object_id_table[mrb_basic_ptr(v)] = MrubyBindStatus::ObjectInfo(new_id);
+            }
+            else
+            {
+                object_id_table[mrb_basic_ptr(v)].ref_count++;
+            }
         }
         v_ = v;
+        
     }
     ~Deleter(){
 
@@ -170,21 +217,23 @@ public:
         if(mrbsp.get()){
             mrb_state* mrb = mrbsp->get_mrb();
             if(mrb){
-                mrb_value avoid_gc_table = mrbsp->get_avoid_gc_table();
-                mrb_int v_id = mrb_obj_id(v_);
-                mrb_value id = mrb_fixnum_value(v_id);
-                mrb_value a = mrb_hash_get(mrb, avoid_gc_table, id);
-                mrb_value nv = mrb_ary_ref(mrb, a, 1);
-                mrb_int n = mrb_fixnum(nv);
-                n--;
-                if(n <= 0)
+                mrb_value v = v_;
+                if(!mrb_immediate_p(v))
                 {
-                    mrb_hash_delete_key(mrb, avoid_gc_table, id);
+                    mrb_value avoid_gc_table = mrbsp->get_avoid_gc_table();
+                    auto& object_id_table = mrbsp->get_object_id_table();
+                    auto& free_id_array = mrbsp->get_free_id_array();
+                    auto& oi = object_id_table[mrb_basic_ptr(v)];
+                    oi.ref_count--;
+                    if(oi.ref_count <= 0)
+                    {
+                        mrb_ary_set(mrb, avoid_gc_table, (mrb_int)oi.id, v);
+                        free_id_array.push_back(oi.id);
+                        object_id_table.erase(mrb_basic_ptr(v));
+                    }
                 }
-                else
-                {
-                    mrb_ary_set(mrb, a, 1, mrb_fixnum_value(n));
-                }
+                
+                
             }
         }
         if(p){
