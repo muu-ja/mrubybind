@@ -26,6 +26,7 @@ public:
       mrb_symbol_value(func_name_s),          // 1: function name
     };
     struct RProc* proc = mrb_proc_new_cfunc_with_env(mrb_, Binder<Func>::call, 2, env);
+    mrb_field_write_barrier(mrb_, (RBasic *)proc, (RBasic *)proc->env);
     if (mod_ == mrb_->kernel_module)
       mrb_define_method_raw(mrb_, mod_, func_name_s, proc);
     else
@@ -85,6 +86,7 @@ public:
       mrb_symbol_value(method_name_s),          // 1: method name
     };
     struct RProc* proc = mrb_proc_new_cfunc_with_env(mrb_, Binder<Method>::call, 2, env);
+    mrb_field_write_barrier(mrb_, (RBasic *)proc, (RBasic *)proc->env);
     struct RClass* klass = GetClass(module_name, class_name);
     mrb_define_class_method_raw(mrb_, klass, method_name_s, proc);
   }
@@ -110,6 +112,7 @@ public:
       mrb_symbol_value(method_name_s), // 1: method name
     };
     struct RProc* proc = mrb_proc_new_cfunc_with_env(mrb_, binder_func, 2, env);
+    mrb_field_write_barrier(mrb_, (RBasic *)proc, (RBasic *)proc->env);
     struct RClass* klass = GetClass(module_name, class_name);
     mrb_define_method_raw(mrb_, klass, method_name_s, proc);
   }
