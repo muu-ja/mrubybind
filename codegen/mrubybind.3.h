@@ -69,7 +69,7 @@ public:
     
     Type<C>::class_name = name;
     Type<C&>::class_name = name;
-    MrubyBindStatus::search(mrb_)->set_class_conversion(name, class_name, true);
+    MrubyBindStatus::search(mrb_)->set_class_conversion(name, name, true);
     MRB_SET_INSTANCE_TT(tc, MRB_TT_DATA);
     BindInstanceMethod(module_name, class_name, "initialize",
                        mrb_cptr_value(mrb_, NULL),
