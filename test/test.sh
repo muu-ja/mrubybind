@@ -47,7 +47,8 @@ run class 'Foo::ctor(123)
 690
 99980001
 Foo::dtor()'
-run module 'modfunc called: 1234'
+run module 'modfunc called: 1234
+c.get_a 4'
 run class_value 'start ClassPointerTest
 ClassValue construct.
 cv -> 7

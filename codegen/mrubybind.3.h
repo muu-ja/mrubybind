@@ -48,10 +48,28 @@ public:
   template <class C>
   void bind_class(const char* module_name, const char* class_name) {
     MrubyArenaStore store(mrb_);
-    struct RClass *tc = mrb_define_class(mrb_, class_name, mrb_->object_class);
-    Type<C>::class_name = class_name;
-    Type<C&>::class_name = class_name;
-    MrubyBindStatus::search(mrb_)->set_class_conversion(class_name, class_name, true);
+    
+    struct RClass * tc;
+    mrb_value mod = mrb_obj_value(mod_);
+    std::string name;
+    if(module_name){
+      name = module_name;
+      name += "::";
+      name += class_name;
+      tc = mrb_define_class(mrb_, name.c_str(), mrb_->object_class);
+      struct RClass * mdp = mrb_define_module(mrb_, module_name);
+      mod = mrb_obj_value(mdp);
+      mrb_define_const(mrb_, mdp, class_name, mrb_obj_value(tc));
+    }
+    else
+    {
+      name = class_name;
+      tc = mrb_define_class(mrb_, class_name, mrb_->object_class);
+    }
+    
+    Type<C>::class_name = name;
+    Type<C&>::class_name = name;
+    MrubyBindStatus::search(mrb_)->set_class_conversion(name, class_name, true);
     MRB_SET_INSTANCE_TT(tc, MRB_TT_DATA);
     BindInstanceMethod(module_name, class_name, "initialize",
                        mrb_cptr_value(mrb_, NULL),
