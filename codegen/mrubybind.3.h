@@ -15,6 +15,31 @@ public:
     MrubyArenaStore store(mrb_);
     mrb_define_const(mrb_, mod_, name, Type<T>::ret(mrb_, v));
   }
+  
+  template <class T>
+  void bind_const(const char* module_name, const char* class_name, const char* name, T v) {
+    MrubyArenaStore store(mrb_);
+    
+    struct RClass * tc;
+    mrb_value mod = mrb_obj_value(mod_);
+    std::string cls_name;
+    if(module_name){
+      cls_name = module_name;
+      cls_name += "::";
+      cls_name += class_name;
+      tc = mrb_define_class(mrb_, cls_name.c_str(), mrb_->object_class);
+      struct RClass * mdp = mrb_define_module(mrb_, module_name);
+      mod = mrb_obj_value(mdp);
+      mrb_define_const(mrb_, mdp, class_name, mrb_obj_value(tc));
+    }
+    else
+    {
+      cls_name = class_name;
+      tc = mrb_define_class(mrb_, class_name, mrb_->object_class);
+    }
+    
+    mrb_define_const(mrb_, tc, name, Type<T>::ret(mrb_, v));
+  }
 
   // Bind function.
   template <class Func>

@@ -41,6 +41,7 @@ int main() {
     b.bind_const("FOO_VALUE", 1234);
     
     b.bind_class<std::shared_ptr<ModClass> >("Mod", "ModClass");
+    b.bind_const("Mod", "ModClass", "CNST", 12345);
     b.bind_static_method("Mod", "ModClass", "create", create_mod_class);
     b.bind_custom_method("Mod", "ModClass", "get_a", mod_class_get_a);
   }
@@ -51,6 +52,7 @@ int main() {
 
   mrb_load_string(mrb, "Mod.modfunc(Mod::FOO_VALUE)\n"
             "c = Mod::ModClass.create 4\n"
+            "puts \"Mod::ModClass::CNST #{Mod::ModClass::CNST}\"\n"
             "puts \"c.get_a #{c.get_a}\"\n"
         );
   if (mrb->exc) {
