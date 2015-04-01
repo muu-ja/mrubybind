@@ -264,7 +264,7 @@ public:
                     oi.ref_count--;
                     if(oi.ref_count <= 0)
                     {
-                        mrb_ary_set(mrb, avoid_gc_table, (mrb_int)oi.id, v);
+                        mrb_ary_set(mrb, avoid_gc_table, (mrb_int)oi.id, mrb_nil_value());
                         free_id_array.push_back(oi.id);
                         object_id_table.erase(mrb_basic_ptr(v));
                     }
