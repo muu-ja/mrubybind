@@ -40,7 +40,7 @@ function fail() {
 
 run void 'dummy called'
 run int '1234321'
-run float '408.0'
+run float '408'
 run string '* Hello, mruby! *'
 run cptr 'cptr test'
 run class 'Foo::ctor(123)

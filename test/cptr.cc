@@ -19,7 +19,7 @@ int main() {
     b.bind("myopen", myopen);
     b.bind("mywrite", mywrite);
   }
-  if (mrb->arena_idx != 0) {
+  if (mrb_gc_arena_save(mrb) != 0) {
     fprintf(stderr, "Arena increased!\n");
     return EXIT_FAILURE;
   }
