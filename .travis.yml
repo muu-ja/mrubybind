@@ -1,0 +1,21 @@
+language: cpp
+compiler:
+    - gcc-4.8
+script:
+    - cd codegen
+    - make
+    - cd ..
+    - git clone https://github.com/dycoon/mruby_dycoon.git
+    - cd mruby_dycoon
+    - make
+    - cd ..
+    - cd test
+    - MRUBY=../mruby_dycoon CXX=g++-4.8 make
+    - ./test.sh
+install:
+    - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
+    - sudo apt-get -qq update
+    - sudo apt-get -qq install g++-4.8
+notifications:
+  email: false
+
