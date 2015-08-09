@@ -26,7 +26,7 @@ void BindFunctionTest(mrb_state* mrb) {
     b.bind("emphasize", emphasize);
   }
 
-  mrubybind::load_string(mrb, 
+  mrubybind::load_string(mrb,
                   "puts square(1111)\n"
                   "puts emphasize('Hello, mruby!')\n"
                   );
@@ -69,7 +69,7 @@ void BindClassTest(mrb_state* mrb) {
     b.bind_static_method("Foo", "baz", &Foo::baz);
   }
 
-  mrubybind::load_string(mrb, 
+  mrubybind::load_string(mrb,
                   "foo = Foo.new(123)\n"
                   "p foo\n"
                   "p foo.bar(567)\n"
@@ -197,7 +197,7 @@ void CallbackFunctionTest(mrb_state* mrb) {
     b.bind_instance_method("Callbacker", "func_a2_string", &Callbacker::func_a2_string);
   }
 
-  mrubybind::load_string(mrb, 
+  mrubybind::load_string(mrb,
                   "v = call_block do\n"
                   "  puts \"?? called\n\""
                   "end\n"
@@ -241,18 +241,18 @@ void CallbackFunctionTest(mrb_state* mrb) {
 class ClassValue{
 public:
     int a;
-    
+
     ClassValue(){
         std::cout << "ClassValue construct.\n";
         std::cout.flush();
         a = 7;
     }
-    
+
     ~ClassValue(){
         std::cout << "ClassValue destruct.\n";
         std::cout.flush();
     }
-    
+
     void decriment(){
         a--;
     }
@@ -297,7 +297,7 @@ int weak_class_value_get_a(std::weak_ptr<ClassValue> cv)
 }
 
 void ClassPointerTest(mrb_state* mrb){
-    
+
     {
         mrubybind::MrubyBind b(mrb);
         b.bind("create_class_value", create_class_value);
@@ -310,8 +310,8 @@ void ClassPointerTest(mrb_state* mrb){
         b.bind("convert_to_weak_class_value", convert_to_weak_class_value);
         b.bind("weak_class_value_get_a", weak_class_value_get_a);
     }
-    
-    mrubybind::load_string(mrb, 
+
+    mrubybind::load_string(mrb,
                     "puts \"start ClassPointerTest\"\n"
                     "cv = create_class_value\n"
                     "puts \"cv -> #{class_value_get_a(cv)}\"\n"
@@ -354,10 +354,10 @@ void MrubyRefTest(mrb_state* mrb){
         mrubybind::MrubyBind b(mrb);
         b.bind("set_mruby_ref", set_mruby_ref);
         b.bind("set_mruby_ref_pair", set_mruby_ref_pair);
-        
+
     }
-    
-    mrubybind::load_string(mrb, 
+
+    mrubybind::load_string(mrb,
                     "set_mruby_ref \"3test\"\n"
                     "s = \"aaa\"\n"
                     "set_mruby_ref_pair s, s\n"
@@ -369,7 +369,7 @@ void MrubyRefTest(mrb_state* mrb){
     std::cout << "mruby_ref = " << mruby_ref.call("gsub", "te", "toa").to_s() << std::endl;
     std::cout << ":a == :a = " << mruby_ref_a.obj_equal(mruby_ref_b) << std::endl;
     std::cout << "arena_index = " << mrb_gc_arena_save(mrb) << std::endl;
-    
+
     if (mrb->exc) {
         mrb_p(mrb, mrb_obj_value(mrb->exc));
     }
@@ -396,7 +396,7 @@ int main() {
     std::cout.flush();
     throw;
   }
-  
+
 
   mrb_close(mrb);
   return 0;

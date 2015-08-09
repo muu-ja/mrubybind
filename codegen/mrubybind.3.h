@@ -15,29 +15,13 @@ public:
     MrubyArenaStore store(mrb_);
     mrb_define_const(mrb_, mod_, name, Type<T>::ret(mrb_, v));
   }
-  
+
   template <class T>
   void bind_const(const char* module_name, const char* class_name, const char* name, T v) {
     MrubyArenaStore store(mrb_);
-    
-    struct RClass * tc;
-    mrb_value mod = mrb_obj_value(mod_);
-    std::string cls_name;
-    if(module_name){
-      cls_name = module_name;
-      cls_name += "::";
-      cls_name += class_name;
-      tc = mrb_define_class(mrb_, cls_name.c_str(), mrb_->object_class);
-      struct RClass * mdp = mrb_define_module(mrb_, module_name);
-      mod = mrb_obj_value(mdp);
-      mrb_define_const(mrb_, mdp, class_name, mrb_obj_value(tc));
-    }
-    else
-    {
-      cls_name = class_name;
-      tc = mrb_define_class(mrb_, class_name, mrb_->object_class);
-    }
-    
+
+    struct RClass * tc = DefineClass(module_name, class_name);
+
     mrb_define_const(mrb_, tc, name, Type<T>::ret(mrb_, v));
   }
 
@@ -68,30 +52,20 @@ public:
                        mrb_cptr_value(mrb_, (void*)new_func_ptr),
                        ClassBinder<Func>::ctor);
   }
-  
+
   // Bind class.(no new func)
   template <class C>
   void bind_class(const char* module_name, const char* class_name) {
     MrubyArenaStore store(mrb_);
-    
-    struct RClass * tc;
-    mrb_value mod = mrb_obj_value(mod_);
+
+    struct RClass * tc = DefineClass(module_name, class_name);
     std::string name;
     if(module_name){
-      name = module_name;
-      name += "::";
-      name += class_name;
-      tc = mrb_define_class(mrb_, name.c_str(), mrb_->object_class);
-      struct RClass * mdp = mrb_define_module(mrb_, module_name);
-      mod = mrb_obj_value(mdp);
-      mrb_define_const(mrb_, mdp, class_name, mrb_obj_value(tc));
+        name += module_name;
+        name += "::";
     }
-    else
-    {
-      name = class_name;
-      tc = mrb_define_class(mrb_, class_name, mrb_->object_class);
-    }
-    
+    name += class_name;
+
     Type<C>::class_name = name;
     Type<C&>::class_name = name;
     MrubyBindStatus::search(mrb_)->set_class_conversion(name, name, true);
@@ -100,7 +74,7 @@ public:
                        mrb_cptr_value(mrb_, NULL),
                        ClassBinder<C*(*)(void)>::ctor);
   }
-  
+
   template <class C>
   void bind_class(const char* class_name) {
     bind_class<C>(NULL, class_name);
@@ -133,14 +107,14 @@ public:
     struct RClass* klass = GetClass(module_name, class_name);
     mrb_define_class_method_raw(mrb_, klass, method_name_s, proc);
   }
-  
+
   template <class Method>
   void bind_static_method(const char* class_name, const char* method_name,
                           Method method_ptr) {
     bind_static_method(NULL, class_name, method_name,
                           method_ptr);
   }
-  
+
   // Bind custom method.
   template <class Func>
   void bind_custom_method(const char* module_name, const char* class_name, const char* method_name, Func func_ptr) {
@@ -159,12 +133,12 @@ public:
     struct RClass* klass = GetClass(module_name, class_name);
     mrb_define_method_raw(mrb_, klass, method_name_s, proc);
   }
-  
+
   template <class Func>
   void bind_custom_method(const char* class_name, const char* method_name, Func func_ptr) {
     bind_custom_method(NULL, class_name, method_name, func_ptr);
   }
-  
+
   //add convertable class pair
   void add_convertable(const char* class_name_first, const char* class_name_second)
   {
@@ -183,6 +157,9 @@ private:
   void Initialize();
 
   // Returns mruby class under a module.
+  std::vector<std::string> SplitModule(const char* module_name);
+  struct RClass* DefineModule(const char* module_name);
+  struct RClass* DefineClass(const char* module_name, const char* class_name);
   struct RClass* GetClass(const char* class_name);
   struct RClass* GetClass(const char* module_name, const char* class_name);
 

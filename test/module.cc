@@ -9,7 +9,7 @@
 class ModClass {
 public:
   int a;
-  
+
   ModClass(int a)
   {
     this->a = a;
@@ -39,11 +39,14 @@ int main() {
     mrubybind::MrubyBind b(mrb, mod);
     b.bind("modfunc", modfunc);
     b.bind_const("FOO_VALUE", 1234);
-    
-    b.bind_class<std::shared_ptr<ModClass> >("Mod", "ModClass");
+
+    b.bind_class<std::shared_ptr<ModClass> >("Mod::Mod2", "ModClass");
     b.bind_const("Mod", "ModClass", "CNST", 12345);
     b.bind_static_method("Mod", "ModClass", "create", create_mod_class);
     b.bind_custom_method("Mod", "ModClass", "get_a", mod_class_get_a);
+    b.bind_const("Mod::Mod2", "ModClass", "CNST", 12345);
+    b.bind_static_method("Mod::Mod2", "ModClass", "create", create_mod_class);
+    b.bind_custom_method("Mod::Mod2", "ModClass", "get_a", mod_class_get_a);
   }
   if (mrb_gc_arena_save(mrb) != arena) {
     fprintf(stderr, "Arena increased!\n");
@@ -52,7 +55,10 @@ int main() {
 
   mrb_load_string(mrb, "Mod.modfunc(Mod::FOO_VALUE)\n"
             "c = Mod::ModClass.create 4\n"
-            "puts \"Mod::ModClass::CNST #{Mod::ModClass::CNST}\"\n"
+            "puts \"Mod::ModClass::CNST #{Mod::Mod2::ModClass::CNST}\"\n"
+            "puts \"c.get_a #{c.get_a}\"\n"
+            "c = Mod::Mod2::ModClass.create 4\n"
+            "puts \"Mod::Mod2::ModClass::CNST #{Mod::Mod2::ModClass::CNST}\"\n"
             "puts \"c.get_a #{c.get_a}\"\n"
         );
   if (mrb->exc) {
