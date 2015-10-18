@@ -62,7 +62,7 @@ public:
         this->mrb = mrb;
         this->ai = mrb_gc_arena_save(mrb);
     }
-    
+
     ~MrubyArenaStore()
     {
         mrb_gc_arena_restore(mrb, ai);
@@ -77,18 +77,18 @@ public:
     struct Data;
     typedef std::shared_ptr<Data> Data_ptr;
     typedef std::map<mrb_state*, Data_ptr > Table;
-    
+
     struct ObjectInfo
     {
-        size_t ref_count; 
+        size_t ref_count;
         size_t id;
-        
+
         ObjectInfo()
         {
             this->ref_count = 0;
             this->id = 0;
         }
-        
+
         ObjectInfo(size_t id)
         {
             this->ref_count = 1;
@@ -97,7 +97,7 @@ public:
     };
     typedef std::map<RBasic*, ObjectInfo> ObjectIdTable;
     typedef std::vector<size_t> FreeIdArray;
-    
+
     static Table& get_living_table(){
         static Table table;
         return table;
@@ -105,48 +105,48 @@ public:
 
     struct Data{
         typedef std::map<std::string, std::map<std::string, bool> > ClassConvertableTable;
-        
-    
+
+
         mrb_state* mrb;
         mrb_value avoid_gc_table;
         ClassConvertableTable class_convertable_table;
         ObjectIdTable object_id_table;
         FreeIdArray free_id_array;
-        
+
         Data(){
-            
+
         }
         ~Data(){
-            
+
         }
-        
+
         mrb_state* get_mrb(){
             return mrb;
         }
-        
+
         mrb_value get_avoid_gc_table(){
             return avoid_gc_table;
         }
-        
+
         size_t new_id()
         {
             return mrb_ary_len(mrb, avoid_gc_table);
         }
-        
+
         ObjectIdTable& get_object_id_table()
         {
             return object_id_table;
         }
-        
+
         FreeIdArray& get_free_id_array()
         {
             return free_id_array;
         }
-        
+
         void set_class_conversion(const std::string& s, const std::string& d, bool c){
             class_convertable_table[s][d] = c;
         }
-        
+
         bool is_convertable(const std::string& s, const std::string& d)
         {
             auto fs = class_convertable_table.find(s);
@@ -158,30 +158,30 @@ public:
             }
             return false;
         }
-        
+
     };
-    
+
     MrubyBindStatus(){
-        
+
     }
 
     MrubyBindStatus(mrb_state* mrb, mrb_value avoid_gc_table){
-    
+
         Table& living_table = get_living_table();
         data = std::make_shared<Data>();
         data->mrb = mrb;
         data->avoid_gc_table = avoid_gc_table;
         living_table[mrb] = data;
     }
-    
+
     ~MrubyBindStatus(){
-    
+
         Table& living_table = MrubyBindStatus::get_living_table();
         living_table.erase(data->mrb);
         data->mrb = NULL;
-        
+
     }
-    
+
     static bool is_living(mrb_state* mrb){
         Table& living_table = get_living_table();
         if(living_table.find(mrb) != living_table.end()){
@@ -189,7 +189,7 @@ public:
         }
         return false;
     }
-    
+
     static Data_ptr search(mrb_state* mrb){
         Table& living_table = get_living_table();
         if(living_table.find(mrb) != living_table.end()){
@@ -197,9 +197,9 @@ public:
         }
         return Data_ptr(NULL);
     }
-    
-    
-    
+
+
+
 private:
     std::shared_ptr<Data> data;
 };
@@ -210,7 +210,7 @@ template<class T> class Deleter{
 public:
     Deleter()
     {
-        
+
     }
 
     Deleter(mrb_state* mrb, mrb_value v){
@@ -242,7 +242,7 @@ public:
             }
         }
         v_ = v;
-        
+
     }
     ~Deleter(){
 
@@ -269,8 +269,8 @@ public:
                         object_id_table.erase(mrb_basic_ptr(v));
                     }
                 }
-                
-                
+
+
             }
         }
         if(p){
@@ -351,12 +351,13 @@ class MrubyRef{
     mrb_state* mrb;
     std::shared_ptr<mrb_value> v;
 public:
-    
+
     MrubyRef();
     MrubyRef(mrb_state* mrb, const mrb_value& v);
     ~MrubyRef();
-    
+
     bool is_living() const;
+    mrb_state* get_mrb() const;
     mrb_value get_v()const;
     bool empty() const;
     bool test() const;
@@ -365,9 +366,9 @@ public:
     int to_i() const;
     float to_float() const;
     double to_double() const;
-    
+
     MrubyRef call(std::string name);
-    
+
 #include "mrubybind_call_generated.h"
 
 };
@@ -591,14 +592,14 @@ template<class T> std::string Type<T&>::class_name = "";
 
 template<class T> struct Type :public TypeClassBase {
     static std::string class_name;
-    static int check(mrb_state* mrb, mrb_value v) { 
+    static int check(mrb_state* mrb, mrb_value v) {
         return mrb_type(v) == MRB_TT_DATA &&
-            MrubyBindStatus::search(mrb)->is_convertable(mrb_obj_classname(mrb, v), class_name); 
+            MrubyBindStatus::search(mrb)->is_convertable(mrb_obj_classname(mrb, v), class_name);
     }
-    static T get(mrb_state* mrb, mrb_value v) { 
-            (void)mrb; return *(T*)DATA_PTR(v); 
+    static T get(mrb_state* mrb, mrb_value v) {
+            (void)mrb; return *(T*)DATA_PTR(v);
         }
-    static mrb_value ret(mrb_state* mrb, T t) { 
+    static mrb_value ret(mrb_state* mrb, T t) {
         RClass* cls;
         mrb_value v;
         cls = mrb_class_get(mrb, class_name.c_str());
