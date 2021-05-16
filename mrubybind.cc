@@ -1,4 +1,5 @@
 // Do not modify this file directly, this is generated
+#include <cfloat>
 #include "mrubybind.h"
 #include "mruby/compile.h"
 #include "mruby/dump.h"
@@ -40,7 +41,7 @@ mrb_value raise(mrb_state *mrb, int parameter_index,
   return mrb_nil_value();
 }
 
-mrb_value raisenarg(mrb_state *mrb, mrb_value func_name, int narg, int nparam) {
+mrb_value raisenarg(mrb_state *mrb, mrb_value func_name, mrb_int narg, int nparam) {
   mrb_raisef(mrb, E_ARGUMENT_ERROR, "'%S': wrong number of arguments (%S for %S)",
              func_name,
              mrb_fixnum_value(narg),
@@ -52,8 +53,10 @@ mrb_value raisenarg(mrb_state *mrb, mrb_value func_name, int narg, int nparam) {
 void
 MrubyBind::mrb_define_class_method_raw(mrb_state *mrb, struct RClass *c, mrb_sym mid, struct RProc *p)
 {
+  static mrb_method_t method;
+  MRB_METHOD_FROM_PROC(method, p);
   mrb_define_class_method(mrb, c, mrb_sym2name(mrb, mid), NULL, MRB_ARGS_ANY()); // Dummy registration.
-  mrb_define_method_raw(mrb, ((RObject*)c)->c, mid, p);
+  mrb_define_method_raw(mrb, ((RObject*)c)->c, mid, method);
 }
 
 MrubyBind::MrubyBind(mrb_state* mrb) : mrb_(mrb), mod_(mrb_->kernel_module) {
@@ -196,8 +199,10 @@ void MrubyBind::BindInstanceMethod(const char* module_name,
     mrb_symbol_value(method_name_s), // 1: method name
   };
   struct RProc* proc = mrb_proc_new_cfunc_with_env(mrb_, binder_func, 2, env);
+  static mrb_method_t method;
+  MRB_METHOD_FROM_PROC(method, proc);
   struct RClass* klass = GetClass(module_name, class_name);
-  mrb_define_method_raw(mrb_, klass, method_name_s, proc);
+  mrb_define_method_raw(mrb_, klass, method_name_s, method);
 }
 
 MrubyRef load_string(mrb_state* mrb, std::string code)
@@ -296,11 +301,11 @@ int MrubyRef::to_i() const{
     if(v.get()){
         mrb_value v = *(this->v.get());
         if(mrb_fixnum_p(v)){
-            return mrb_fixnum(v);
+            return (int)mrb_fixnum(v);
         }
         else{
             v = mrb_funcall(mrb, v, "to_i", 0);
-            return mrb_fixnum(v);
+            return (int)mrb_fixnum(v);
         }
     }
     else{
@@ -312,11 +317,11 @@ float MrubyRef::to_float() const{
     if(v.get()){
         mrb_value v = *(this->v.get());
         if(mrb_float_p(v)){
-            return mrb_float(v);
+            return (float)mrb_float(v);
         }
         else{
             v = mrb_funcall(mrb, v, "to_f", 0);
-            return mrb_float(v);
+            return (float)mrb_float(v);
         }
     }
     else{

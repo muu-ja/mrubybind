@@ -130,7 +130,7 @@ public:
 
         size_t new_id()
         {
-            return mrb_ary_len(mrb, avoid_gc_table);
+            return RARRAY_LEN(avoid_gc_table);
         }
 
         ObjectIdTable& get_object_id_table()
@@ -396,7 +396,7 @@ template<>
 struct Type<int> {
   static const char TYPE_NAME[];
   static int check(mrb_state*, mrb_value v) { return mrb_fixnum_p(v) || mrb_float_p(v); }
-  static int get(mrb_state* mrb, mrb_value v) { (void)mrb; return mrb_fixnum_p(v) ? mrb_fixnum(v) : mrb_float(v); }
+  static int get(mrb_state* mrb, mrb_value v) { (void)mrb; return mrb_fixnum_p(v) ? (int)mrb_fixnum(v) : (int)mrb_float(v); }
   static mrb_value ret(mrb_state*, int i) { return mrb_fixnum_value(i); }
 };
 
@@ -404,7 +404,7 @@ template<>
 struct Type<unsigned int> {
   static const char TYPE_NAME[];
   static int check(mrb_state*, mrb_value v) { return mrb_fixnum_p(v) || mrb_float_p(v); }
-  static unsigned int get(mrb_state* mrb, mrb_value v) { (void)mrb; return mrb_fixnum_p(v) ? mrb_fixnum(v) : mrb_float(v); }
+  static unsigned int get(mrb_state* mrb, mrb_value v) { (void)mrb; return mrb_fixnum_p(v) ? (unsigned int)mrb_fixnum(v) : (unsigned int)mrb_float(v); }
   static mrb_value ret(mrb_state*, unsigned int i) { return mrb_fixnum_value(i); }
 };
 
@@ -413,7 +413,7 @@ template<>
 struct Type<float> {
   static const char TYPE_NAME[];
   static int check(mrb_state*, mrb_value v) { return mrb_float_p(v) || mrb_fixnum_p(v); }
-  static float get(mrb_state* mrb, mrb_value v) { (void)mrb; return mrb_float_p(v) ? mrb_float(v) : mrb_fixnum(v); }
+  static float get(mrb_state* mrb, mrb_value v) { (void)mrb; return mrb_float_p(v) ? (float)mrb_float(v) : mrb_fixnum(v); }
   static mrb_value ret(mrb_state* mrb, float f) { return mrb_float_value(mrb, f); }
 };
 
@@ -536,7 +536,7 @@ struct Type<MrubyRef> {
 template <class T>
 struct Binder {
   // Template specialization.
-  //static mrb_value call(mrb_state* mrb, void* p, mrb_value* args, int narg) = 0;
+  //static mrb_value call(mrb_state* mrb, void* p, mrb_value* args, mrb_int narg) = 0;
 };
 
 // Template class for Binder.
@@ -550,7 +550,7 @@ struct ClassBinder {
   }
 
   // Template specialization.
-  //static void ctor(mrb_state* mrb, mrb_value self, void* new_func_ptr, mrb_value* args, int narg) {
+  //static void ctor(mrb_state* mrb, mrb_value self, void* new_func_ptr, mrb_value* args, mrb_int narg) {
 };
 template<class C>
 mrb_data_type ClassBinder<C>::type_info = { "???", dtor };
@@ -558,7 +558,7 @@ mrb_data_type ClassBinder<C>::type_info = { "???", dtor };
 template <class T>
 struct CustomClassBinder {
   // Template specialization.
-  //static mrb_value call(mrb_state* mrb, void* p, mrb_value* args, int narg) = 0;
+  //static mrb_value call(mrb_state* mrb, void* p, mrb_value* args, mrb_int narg) = 0;
 };
 
 // Other Class
@@ -617,7 +617,7 @@ template<class T> std::string Type<T>::class_name = "";
 //
 mrb_value raise(mrb_state *mrb, int parameter_index,
                 const char* required_type_name, mrb_value value);
-mrb_value raisenarg(mrb_state *mrb, mrb_value func_name, int narg, int nparam);
+mrb_value raisenarg(mrb_state *mrb, mrb_value func_name, mrb_int narg, int nparam);
 
 // Includes generated template specialization.
 //#include "mrubybind.inc"
@@ -633,10 +633,10 @@ mrb_value raisenarg(mrb_state *mrb, mrb_value func_name, int narg, int nparam);
 // void f(void);
 template<>
 struct Binder<void (*)(void)> {
-  static const int NPARAM = 0;
+  static const mrb_int NPARAM = 0;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -659,10 +659,10 @@ struct Binder<void (*)(void)> {
 // R f(void);
 template<class R>
 struct Binder<R (*)(void)> {
-  static const int NPARAM = 0;
+  static const mrb_int NPARAM = 0;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -685,12 +685,12 @@ struct Binder<R (*)(void)> {
 // C* ctor(void);
 template<class C>
 struct ClassBinder<C* (*)(void)> {
-  static const int NPARAM = 0;
+  static const mrb_int NPARAM = 0;
   static mrb_value ctor(mrb_state* mrb, mrb_value self) {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -717,10 +717,10 @@ struct ClassBinder<C* (*)(void)> {
 // class C { void f(void) };
 template<class C>
 struct ClassBinder<void (C::*)(void)> {
-  static const int NPARAM = 0;
+  static const mrb_int NPARAM = 0;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -745,10 +745,10 @@ struct ClassBinder<void (C::*)(void)> {
 // class C { R f(void) };
 template<class C, class R>
 struct ClassBinder<R (C::*)(void)> {
-  static const int NPARAM = 0;
+  static const mrb_int NPARAM = 0;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -773,7 +773,7 @@ struct ClassBinder<R (C::*)(void)> {
 // void f(P0);
 template<class P0>
 struct Binder<void (*)(P0)> {
-  static const int NPARAM = 1;
+  static const mrb_int NPARAM = 1;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
     int narg;
@@ -799,10 +799,10 @@ struct Binder<void (*)(P0)> {
 // R f(P0);
 template<class R, class P0>
 struct Binder<R (*)(P0)> {
-  static const int NPARAM = 1;
+  static const mrb_int NPARAM = 1;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -825,12 +825,12 @@ struct Binder<R (*)(P0)> {
 // C* ctor(P0);
 template<class C, class P0>
 struct ClassBinder<C* (*)(P0)> {
-  static const int NPARAM = 1;
+  static const mrb_int NPARAM = 1;
   static mrb_value ctor(mrb_state* mrb, mrb_value self) {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -857,10 +857,10 @@ struct ClassBinder<C* (*)(P0)> {
 // class C { void f(P0) };
 template<class C, class P0>
 struct ClassBinder<void (C::*)(P0)> {
-  static const int NPARAM = 1;
+  static const mrb_int NPARAM = 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -885,10 +885,10 @@ struct ClassBinder<void (C::*)(P0)> {
 // class C { R f(P0) };
 template<class C, class R, class P0>
 struct ClassBinder<R (C::*)(P0)> {
-  static const int NPARAM = 1;
+  static const mrb_int NPARAM = 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -914,10 +914,10 @@ struct ClassBinder<R (C::*)(P0)> {
 // custom method
 template<class P0>
 struct CustomClassBinder<void (*)(P0)> {
-  static const int NPARAM = 1 - 1;
+  static const mrb_int NPARAM = 1 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -941,10 +941,10 @@ struct CustomClassBinder<void (*)(P0)> {
 
 template<class R, class P0>
 struct CustomClassBinder<R (*)(P0)> {
-  static const int NPARAM = 1 - 1;
+  static const mrb_int NPARAM = 1 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -971,10 +971,10 @@ struct CustomClassBinder<R (*)(P0)> {
 // custom method
 template<class P0>
 struct CustomClassBinder<void (*)(P0&)> {
-  static const int NPARAM = 1 - 1;
+  static const mrb_int NPARAM = 1 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -998,10 +998,10 @@ struct CustomClassBinder<void (*)(P0&)> {
 
 template<class R, class P0>
 struct CustomClassBinder<R (*)(P0&)> {
-  static const int NPARAM = 1 - 1;
+  static const mrb_int NPARAM = 1 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1027,10 +1027,10 @@ struct CustomClassBinder<R (*)(P0&)> {
 // void f(P0, P1);
 template<class P0, class P1>
 struct Binder<void (*)(P0, P1)> {
-  static const int NPARAM = 2;
+  static const mrb_int NPARAM = 2;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1053,10 +1053,10 @@ struct Binder<void (*)(P0, P1)> {
 // R f(P0, P1);
 template<class R, class P0, class P1>
 struct Binder<R (*)(P0, P1)> {
-  static const int NPARAM = 2;
+  static const mrb_int NPARAM = 2;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1079,12 +1079,12 @@ struct Binder<R (*)(P0, P1)> {
 // C* ctor(P0, P1);
 template<class C, class P0, class P1>
 struct ClassBinder<C* (*)(P0, P1)> {
-  static const int NPARAM = 2;
+  static const mrb_int NPARAM = 2;
   static mrb_value ctor(mrb_state* mrb, mrb_value self) {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1111,10 +1111,10 @@ struct ClassBinder<C* (*)(P0, P1)> {
 // class C { void f(P0, P1) };
 template<class C, class P0, class P1>
 struct ClassBinder<void (C::*)(P0, P1)> {
-  static const int NPARAM = 2;
+  static const mrb_int NPARAM = 2;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1139,10 +1139,10 @@ struct ClassBinder<void (C::*)(P0, P1)> {
 // class C { R f(P0, P1) };
 template<class C, class R, class P0, class P1>
 struct ClassBinder<R (C::*)(P0, P1)> {
-  static const int NPARAM = 2;
+  static const mrb_int NPARAM = 2;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1168,10 +1168,10 @@ struct ClassBinder<R (C::*)(P0, P1)> {
 // custom method
 template<class P0, class P1>
 struct CustomClassBinder<void (*)(P0, P1)> {
-  static const int NPARAM = 2 - 1;
+  static const mrb_int NPARAM = 2 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1195,10 +1195,10 @@ struct CustomClassBinder<void (*)(P0, P1)> {
 
 template<class R, class P0, class P1>
 struct CustomClassBinder<R (*)(P0, P1)> {
-  static const int NPARAM = 2 - 1;
+  static const mrb_int NPARAM = 2 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1225,10 +1225,10 @@ struct CustomClassBinder<R (*)(P0, P1)> {
 // custom method
 template<class P0, class P1>
 struct CustomClassBinder<void (*)(P0&, P1)> {
-  static const int NPARAM = 2 - 1;
+  static const mrb_int NPARAM = 2 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1252,10 +1252,10 @@ struct CustomClassBinder<void (*)(P0&, P1)> {
 
 template<class R, class P0, class P1>
 struct CustomClassBinder<R (*)(P0&, P1)> {
-  static const int NPARAM = 2 - 1;
+  static const mrb_int NPARAM = 2 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1281,10 +1281,10 @@ struct CustomClassBinder<R (*)(P0&, P1)> {
 // void f(P0, P1, P2);
 template<class P0, class P1, class P2>
 struct Binder<void (*)(P0, P1, P2)> {
-  static const int NPARAM = 3;
+  static const mrb_int NPARAM = 3;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1307,10 +1307,10 @@ struct Binder<void (*)(P0, P1, P2)> {
 // R f(P0, P1, P2);
 template<class R, class P0, class P1, class P2>
 struct Binder<R (*)(P0, P1, P2)> {
-  static const int NPARAM = 3;
+  static const mrb_int NPARAM = 3;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1333,12 +1333,12 @@ struct Binder<R (*)(P0, P1, P2)> {
 // C* ctor(P0, P1, P2);
 template<class C, class P0, class P1, class P2>
 struct ClassBinder<C* (*)(P0, P1, P2)> {
-  static const int NPARAM = 3;
+  static const mrb_int NPARAM = 3;
   static mrb_value ctor(mrb_state* mrb, mrb_value self) {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1365,10 +1365,10 @@ struct ClassBinder<C* (*)(P0, P1, P2)> {
 // class C { void f(P0, P1, P2) };
 template<class C, class P0, class P1, class P2>
 struct ClassBinder<void (C::*)(P0, P1, P2)> {
-  static const int NPARAM = 3;
+  static const mrb_int NPARAM = 3;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1393,10 +1393,10 @@ struct ClassBinder<void (C::*)(P0, P1, P2)> {
 // class C { R f(P0, P1, P2) };
 template<class C, class R, class P0, class P1, class P2>
 struct ClassBinder<R (C::*)(P0, P1, P2)> {
-  static const int NPARAM = 3;
+  static const mrb_int NPARAM = 3;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1422,10 +1422,10 @@ struct ClassBinder<R (C::*)(P0, P1, P2)> {
 // custom method
 template<class P0, class P1, class P2>
 struct CustomClassBinder<void (*)(P0, P1, P2)> {
-  static const int NPARAM = 3 - 1;
+  static const mrb_int NPARAM = 3 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1449,10 +1449,10 @@ struct CustomClassBinder<void (*)(P0, P1, P2)> {
 
 template<class R, class P0, class P1, class P2>
 struct CustomClassBinder<R (*)(P0, P1, P2)> {
-  static const int NPARAM = 3 - 1;
+  static const mrb_int NPARAM = 3 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1479,10 +1479,10 @@ struct CustomClassBinder<R (*)(P0, P1, P2)> {
 // custom method
 template<class P0, class P1, class P2>
 struct CustomClassBinder<void (*)(P0&, P1, P2)> {
-  static const int NPARAM = 3 - 1;
+  static const mrb_int NPARAM = 3 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1506,10 +1506,10 @@ struct CustomClassBinder<void (*)(P0&, P1, P2)> {
 
 template<class R, class P0, class P1, class P2>
 struct CustomClassBinder<R (*)(P0&, P1, P2)> {
-  static const int NPARAM = 3 - 1;
+  static const mrb_int NPARAM = 3 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1535,10 +1535,10 @@ struct CustomClassBinder<R (*)(P0&, P1, P2)> {
 // void f(P0, P1, P2, P3);
 template<class P0, class P1, class P2, class P3>
 struct Binder<void (*)(P0, P1, P2, P3)> {
-  static const int NPARAM = 4;
+  static const mrb_int NPARAM = 4;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1561,10 +1561,10 @@ struct Binder<void (*)(P0, P1, P2, P3)> {
 // R f(P0, P1, P2, P3);
 template<class R, class P0, class P1, class P2, class P3>
 struct Binder<R (*)(P0, P1, P2, P3)> {
-  static const int NPARAM = 4;
+  static const mrb_int NPARAM = 4;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1587,12 +1587,12 @@ struct Binder<R (*)(P0, P1, P2, P3)> {
 // C* ctor(P0, P1, P2, P3);
 template<class C, class P0, class P1, class P2, class P3>
 struct ClassBinder<C* (*)(P0, P1, P2, P3)> {
-  static const int NPARAM = 4;
+  static const mrb_int NPARAM = 4;
   static mrb_value ctor(mrb_state* mrb, mrb_value self) {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1619,10 +1619,10 @@ struct ClassBinder<C* (*)(P0, P1, P2, P3)> {
 // class C { void f(P0, P1, P2, P3) };
 template<class C, class P0, class P1, class P2, class P3>
 struct ClassBinder<void (C::*)(P0, P1, P2, P3)> {
-  static const int NPARAM = 4;
+  static const mrb_int NPARAM = 4;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1647,10 +1647,10 @@ struct ClassBinder<void (C::*)(P0, P1, P2, P3)> {
 // class C { R f(P0, P1, P2, P3) };
 template<class C, class R, class P0, class P1, class P2, class P3>
 struct ClassBinder<R (C::*)(P0, P1, P2, P3)> {
-  static const int NPARAM = 4;
+  static const mrb_int NPARAM = 4;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1676,10 +1676,10 @@ struct ClassBinder<R (C::*)(P0, P1, P2, P3)> {
 // custom method
 template<class P0, class P1, class P2, class P3>
 struct CustomClassBinder<void (*)(P0, P1, P2, P3)> {
-  static const int NPARAM = 4 - 1;
+  static const mrb_int NPARAM = 4 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1703,10 +1703,10 @@ struct CustomClassBinder<void (*)(P0, P1, P2, P3)> {
 
 template<class R, class P0, class P1, class P2, class P3>
 struct CustomClassBinder<R (*)(P0, P1, P2, P3)> {
-  static const int NPARAM = 4 - 1;
+  static const mrb_int NPARAM = 4 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1733,10 +1733,10 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3)> {
 // custom method
 template<class P0, class P1, class P2, class P3>
 struct CustomClassBinder<void (*)(P0&, P1, P2, P3)> {
-  static const int NPARAM = 4 - 1;
+  static const mrb_int NPARAM = 4 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1760,10 +1760,10 @@ struct CustomClassBinder<void (*)(P0&, P1, P2, P3)> {
 
 template<class R, class P0, class P1, class P2, class P3>
 struct CustomClassBinder<R (*)(P0&, P1, P2, P3)> {
-  static const int NPARAM = 4 - 1;
+  static const mrb_int NPARAM = 4 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1789,10 +1789,10 @@ struct CustomClassBinder<R (*)(P0&, P1, P2, P3)> {
 // void f(P0, P1, P2, P3, P4);
 template<class P0, class P1, class P2, class P3, class P4>
 struct Binder<void (*)(P0, P1, P2, P3, P4)> {
-  static const int NPARAM = 5;
+  static const mrb_int NPARAM = 5;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1815,10 +1815,10 @@ struct Binder<void (*)(P0, P1, P2, P3, P4)> {
 // R f(P0, P1, P2, P3, P4);
 template<class R, class P0, class P1, class P2, class P3, class P4>
 struct Binder<R (*)(P0, P1, P2, P3, P4)> {
-  static const int NPARAM = 5;
+  static const mrb_int NPARAM = 5;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1841,12 +1841,12 @@ struct Binder<R (*)(P0, P1, P2, P3, P4)> {
 // C* ctor(P0, P1, P2, P3, P4);
 template<class C, class P0, class P1, class P2, class P3, class P4>
 struct ClassBinder<C* (*)(P0, P1, P2, P3, P4)> {
-  static const int NPARAM = 5;
+  static const mrb_int NPARAM = 5;
   static mrb_value ctor(mrb_state* mrb, mrb_value self) {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1873,10 +1873,10 @@ struct ClassBinder<C* (*)(P0, P1, P2, P3, P4)> {
 // class C { void f(P0, P1, P2, P3, P4) };
 template<class C, class P0, class P1, class P2, class P3, class P4>
 struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4)> {
-  static const int NPARAM = 5;
+  static const mrb_int NPARAM = 5;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1901,10 +1901,10 @@ struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4)> {
 // class C { R f(P0, P1, P2, P3, P4) };
 template<class C, class R, class P0, class P1, class P2, class P3, class P4>
 struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4)> {
-  static const int NPARAM = 5;
+  static const mrb_int NPARAM = 5;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1930,10 +1930,10 @@ struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4)> {
 // custom method
 template<class P0, class P1, class P2, class P3, class P4>
 struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4)> {
-  static const int NPARAM = 5 - 1;
+  static const mrb_int NPARAM = 5 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1957,10 +1957,10 @@ struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4)> {
 
 template<class R, class P0, class P1, class P2, class P3, class P4>
 struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4)> {
-  static const int NPARAM = 5 - 1;
+  static const mrb_int NPARAM = 5 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -1987,10 +1987,10 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4)> {
 // custom method
 template<class P0, class P1, class P2, class P3, class P4>
 struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4)> {
-  static const int NPARAM = 5 - 1;
+  static const mrb_int NPARAM = 5 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2014,10 +2014,10 @@ struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4)> {
 
 template<class R, class P0, class P1, class P2, class P3, class P4>
 struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4)> {
-  static const int NPARAM = 5 - 1;
+  static const mrb_int NPARAM = 5 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2043,10 +2043,10 @@ struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4)> {
 // void f(P0, P1, P2, P3, P4, P5);
 template<class P0, class P1, class P2, class P3, class P4, class P5>
 struct Binder<void (*)(P0, P1, P2, P3, P4, P5)> {
-  static const int NPARAM = 6;
+  static const mrb_int NPARAM = 6;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2069,10 +2069,10 @@ struct Binder<void (*)(P0, P1, P2, P3, P4, P5)> {
 // R f(P0, P1, P2, P3, P4, P5);
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5>
 struct Binder<R (*)(P0, P1, P2, P3, P4, P5)> {
-  static const int NPARAM = 6;
+  static const mrb_int NPARAM = 6;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2095,12 +2095,12 @@ struct Binder<R (*)(P0, P1, P2, P3, P4, P5)> {
 // C* ctor(P0, P1, P2, P3, P4, P5);
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5>
 struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5)> {
-  static const int NPARAM = 6;
+  static const mrb_int NPARAM = 6;
   static mrb_value ctor(mrb_state* mrb, mrb_value self) {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2127,10 +2127,10 @@ struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5)> {
 // class C { void f(P0, P1, P2, P3, P4, P5) };
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5>
 struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5)> {
-  static const int NPARAM = 6;
+  static const mrb_int NPARAM = 6;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2155,10 +2155,10 @@ struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5)> {
 // class C { R f(P0, P1, P2, P3, P4, P5) };
 template<class C, class R, class P0, class P1, class P2, class P3, class P4, class P5>
 struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5)> {
-  static const int NPARAM = 6;
+  static const mrb_int NPARAM = 6;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2184,10 +2184,10 @@ struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5)> {
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5>
 struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5)> {
-  static const int NPARAM = 6 - 1;
+  static const mrb_int NPARAM = 6 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2211,10 +2211,10 @@ struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5)> {
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5>
 struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5)> {
-  static const int NPARAM = 6 - 1;
+  static const mrb_int NPARAM = 6 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2241,10 +2241,10 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5)> {
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5>
 struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5)> {
-  static const int NPARAM = 6 - 1;
+  static const mrb_int NPARAM = 6 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2268,10 +2268,10 @@ struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5)> {
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5>
 struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5)> {
-  static const int NPARAM = 6 - 1;
+  static const mrb_int NPARAM = 6 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2297,10 +2297,10 @@ struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5)> {
 // void f(P0, P1, P2, P3, P4, P5, P6);
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6>
 struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6)> {
-  static const int NPARAM = 7;
+  static const mrb_int NPARAM = 7;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2323,10 +2323,10 @@ struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6)> {
 // R f(P0, P1, P2, P3, P4, P5, P6);
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6>
 struct Binder<R (*)(P0, P1, P2, P3, P4, P5, P6)> {
-  static const int NPARAM = 7;
+  static const mrb_int NPARAM = 7;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2349,12 +2349,12 @@ struct Binder<R (*)(P0, P1, P2, P3, P4, P5, P6)> {
 // C* ctor(P0, P1, P2, P3, P4, P5, P6);
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5, class P6>
 struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6)> {
-  static const int NPARAM = 7;
+  static const mrb_int NPARAM = 7;
   static mrb_value ctor(mrb_state* mrb, mrb_value self) {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2381,10 +2381,10 @@ struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6)> {
 // class C { void f(P0, P1, P2, P3, P4, P5, P6) };
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5, class P6>
 struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5, P6)> {
-  static const int NPARAM = 7;
+  static const mrb_int NPARAM = 7;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2409,10 +2409,10 @@ struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5, P6)> {
 // class C { R f(P0, P1, P2, P3, P4, P5, P6) };
 template<class C, class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6>
 struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5, P6)> {
-  static const int NPARAM = 7;
+  static const mrb_int NPARAM = 7;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2438,10 +2438,10 @@ struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5, P6)> {
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6>
 struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5, P6)> {
-  static const int NPARAM = 7 - 1;
+  static const mrb_int NPARAM = 7 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2465,10 +2465,10 @@ struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5, P6)> {
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6>
 struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6)> {
-  static const int NPARAM = 7 - 1;
+  static const mrb_int NPARAM = 7 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2495,10 +2495,10 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6)> {
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6>
 struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6)> {
-  static const int NPARAM = 7 - 1;
+  static const mrb_int NPARAM = 7 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2522,10 +2522,10 @@ struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6)> {
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6>
 struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6)> {
-  static const int NPARAM = 7 - 1;
+  static const mrb_int NPARAM = 7 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2551,10 +2551,10 @@ struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6)> {
 // void f(P0, P1, P2, P3, P4, P5, P6, P7);
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7>
 struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7)> {
-  static const int NPARAM = 8;
+  static const mrb_int NPARAM = 8;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2577,10 +2577,10 @@ struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7)> {
 // R f(P0, P1, P2, P3, P4, P5, P6, P7);
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7>
 struct Binder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7)> {
-  static const int NPARAM = 8;
+  static const mrb_int NPARAM = 8;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2603,12 +2603,12 @@ struct Binder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7)> {
 // C* ctor(P0, P1, P2, P3, P4, P5, P6, P7);
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7>
 struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6, P7)> {
-  static const int NPARAM = 8;
+  static const mrb_int NPARAM = 8;
   static mrb_value ctor(mrb_state* mrb, mrb_value self) {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2635,10 +2635,10 @@ struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6, P7)> {
 // class C { void f(P0, P1, P2, P3, P4, P5, P6, P7) };
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7>
 struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5, P6, P7)> {
-  static const int NPARAM = 8;
+  static const mrb_int NPARAM = 8;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2663,10 +2663,10 @@ struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5, P6, P7)> {
 // class C { R f(P0, P1, P2, P3, P4, P5, P6, P7) };
 template<class C, class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7>
 struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5, P6, P7)> {
-  static const int NPARAM = 8;
+  static const mrb_int NPARAM = 8;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2692,10 +2692,10 @@ struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5, P6, P7)> {
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7>
 struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7)> {
-  static const int NPARAM = 8 - 1;
+  static const mrb_int NPARAM = 8 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2719,10 +2719,10 @@ struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7)> {
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7>
 struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7)> {
-  static const int NPARAM = 8 - 1;
+  static const mrb_int NPARAM = 8 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2749,10 +2749,10 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7)> {
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7>
 struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7)> {
-  static const int NPARAM = 8 - 1;
+  static const mrb_int NPARAM = 8 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2776,10 +2776,10 @@ struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7)> {
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7>
 struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7)> {
-  static const int NPARAM = 8 - 1;
+  static const mrb_int NPARAM = 8 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2805,10 +2805,10 @@ struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7)> {
 // void f(P0, P1, P2, P3, P4, P5, P6, P7, P8);
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8>
 struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8)> {
-  static const int NPARAM = 9;
+  static const mrb_int NPARAM = 9;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2831,10 +2831,10 @@ struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8)> {
 // R f(P0, P1, P2, P3, P4, P5, P6, P7, P8);
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8>
 struct Binder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8)> {
-  static const int NPARAM = 9;
+  static const mrb_int NPARAM = 9;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2857,12 +2857,12 @@ struct Binder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8)> {
 // C* ctor(P0, P1, P2, P3, P4, P5, P6, P7, P8);
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8>
 struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8)> {
-  static const int NPARAM = 9;
+  static const mrb_int NPARAM = 9;
   static mrb_value ctor(mrb_state* mrb, mrb_value self) {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2889,10 +2889,10 @@ struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8)> {
 // class C { void f(P0, P1, P2, P3, P4, P5, P6, P7, P8) };
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8>
 struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8)> {
-  static const int NPARAM = 9;
+  static const mrb_int NPARAM = 9;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2917,10 +2917,10 @@ struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8)> {
 // class C { R f(P0, P1, P2, P3, P4, P5, P6, P7, P8) };
 template<class C, class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8>
 struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8)> {
-  static const int NPARAM = 9;
+  static const mrb_int NPARAM = 9;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2946,10 +2946,10 @@ struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8)> {
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8>
 struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8)> {
-  static const int NPARAM = 9 - 1;
+  static const mrb_int NPARAM = 9 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -2973,10 +2973,10 @@ struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8)> {
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8>
 struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8)> {
-  static const int NPARAM = 9 - 1;
+  static const mrb_int NPARAM = 9 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3003,10 +3003,10 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8)> {
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8>
 struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8)> {
-  static const int NPARAM = 9 - 1;
+  static const mrb_int NPARAM = 9 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3030,10 +3030,10 @@ struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8)> {
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8>
 struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8)> {
-  static const int NPARAM = 9 - 1;
+  static const mrb_int NPARAM = 9 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3059,10 +3059,10 @@ struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8)> {
 // void f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9);
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9>
 struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
-  static const int NPARAM = 10;
+  static const mrb_int NPARAM = 10;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3085,10 +3085,10 @@ struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
 // R f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9);
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9>
 struct Binder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
-  static const int NPARAM = 10;
+  static const mrb_int NPARAM = 10;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3111,12 +3111,12 @@ struct Binder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
 // C* ctor(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9);
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9>
 struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
-  static const int NPARAM = 10;
+  static const mrb_int NPARAM = 10;
   static mrb_value ctor(mrb_state* mrb, mrb_value self) {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3143,10 +3143,10 @@ struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
 // class C { void f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9) };
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9>
 struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
-  static const int NPARAM = 10;
+  static const mrb_int NPARAM = 10;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3171,10 +3171,10 @@ struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
 // class C { R f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9) };
 template<class C, class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9>
 struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
-  static const int NPARAM = 10;
+  static const mrb_int NPARAM = 10;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3200,10 +3200,10 @@ struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9>
 struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
-  static const int NPARAM = 10 - 1;
+  static const mrb_int NPARAM = 10 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3227,10 +3227,10 @@ struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9>
 struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
-  static const int NPARAM = 10 - 1;
+  static const mrb_int NPARAM = 10 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3257,10 +3257,10 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9>
 struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
-  static const int NPARAM = 10 - 1;
+  static const mrb_int NPARAM = 10 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3284,10 +3284,10 @@ struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9>
 struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
-  static const int NPARAM = 10 - 1;
+  static const mrb_int NPARAM = 10 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3313,10 +3313,10 @@ struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9)> {
 // void f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10);
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10>
 struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)> {
-  static const int NPARAM = 11;
+  static const mrb_int NPARAM = 11;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3339,10 +3339,10 @@ struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)> {
 // R f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10);
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10>
 struct Binder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)> {
-  static const int NPARAM = 11;
+  static const mrb_int NPARAM = 11;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3365,12 +3365,12 @@ struct Binder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)> {
 // C* ctor(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10);
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10>
 struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)> {
-  static const int NPARAM = 11;
+  static const mrb_int NPARAM = 11;
   static mrb_value ctor(mrb_state* mrb, mrb_value self) {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3397,10 +3397,10 @@ struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)> {
 // class C { void f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10) };
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10>
 struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)> {
-  static const int NPARAM = 11;
+  static const mrb_int NPARAM = 11;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3425,10 +3425,10 @@ struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)> {
 // class C { R f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10) };
 template<class C, class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10>
 struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)> {
-  static const int NPARAM = 11;
+  static const mrb_int NPARAM = 11;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3454,10 +3454,10 @@ struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)> {
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10>
 struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)> {
-  static const int NPARAM = 11 - 1;
+  static const mrb_int NPARAM = 11 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3481,10 +3481,10 @@ struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)> 
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10>
 struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)> {
-  static const int NPARAM = 11 - 1;
+  static const mrb_int NPARAM = 11 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3511,10 +3511,10 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)> {
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10>
 struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)> {
-  static const int NPARAM = 11 - 1;
+  static const mrb_int NPARAM = 11 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3538,10 +3538,10 @@ struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)>
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10>
 struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)> {
-  static const int NPARAM = 11 - 1;
+  static const mrb_int NPARAM = 11 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3567,10 +3567,10 @@ struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)> {
 // void f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11);
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11>
 struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)> {
-  static const int NPARAM = 12;
+  static const mrb_int NPARAM = 12;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3593,10 +3593,10 @@ struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)> {
 // R f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11);
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11>
 struct Binder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)> {
-  static const int NPARAM = 12;
+  static const mrb_int NPARAM = 12;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3619,12 +3619,12 @@ struct Binder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)> {
 // C* ctor(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11);
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11>
 struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)> {
-  static const int NPARAM = 12;
+  static const mrb_int NPARAM = 12;
   static mrb_value ctor(mrb_state* mrb, mrb_value self) {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3651,10 +3651,10 @@ struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)> {
 // class C { void f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11) };
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11>
 struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)> {
-  static const int NPARAM = 12;
+  static const mrb_int NPARAM = 12;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3679,10 +3679,10 @@ struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)
 // class C { R f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11) };
 template<class C, class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11>
 struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)> {
-  static const int NPARAM = 12;
+  static const mrb_int NPARAM = 12;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3708,10 +3708,10 @@ struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)> {
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11>
 struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)> {
-  static const int NPARAM = 12 - 1;
+  static const mrb_int NPARAM = 12 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3735,10 +3735,10 @@ struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11>
 struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)> {
-  static const int NPARAM = 12 - 1;
+  static const mrb_int NPARAM = 12 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3765,10 +3765,10 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11>
 struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)> {
-  static const int NPARAM = 12 - 1;
+  static const mrb_int NPARAM = 12 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3792,10 +3792,10 @@ struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, 
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11>
 struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)> {
-  static const int NPARAM = 12 - 1;
+  static const mrb_int NPARAM = 12 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3821,10 +3821,10 @@ struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11
 // void f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12);
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12>
 struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)> {
-  static const int NPARAM = 13;
+  static const mrb_int NPARAM = 13;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3847,10 +3847,10 @@ struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)> {
 // R f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12);
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12>
 struct Binder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)> {
-  static const int NPARAM = 13;
+  static const mrb_int NPARAM = 13;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3873,12 +3873,12 @@ struct Binder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)> {
 // C* ctor(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12);
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12>
 struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)> {
-  static const int NPARAM = 13;
+  static const mrb_int NPARAM = 13;
   static mrb_value ctor(mrb_state* mrb, mrb_value self) {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3905,10 +3905,10 @@ struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)
 // class C { void f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12) };
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12>
 struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)> {
-  static const int NPARAM = 13;
+  static const mrb_int NPARAM = 13;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3933,10 +3933,10 @@ struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11,
 // class C { R f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12) };
 template<class C, class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12>
 struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)> {
-  static const int NPARAM = 13;
+  static const mrb_int NPARAM = 13;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3962,10 +3962,10 @@ struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P1
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12>
 struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)> {
-  static const int NPARAM = 13 - 1;
+  static const mrb_int NPARAM = 13 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -3989,10 +3989,10 @@ struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12>
 struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)> {
-  static const int NPARAM = 13 - 1;
+  static const mrb_int NPARAM = 13 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4019,10 +4019,10 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11,
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12>
 struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)> {
-  static const int NPARAM = 13 - 1;
+  static const mrb_int NPARAM = 13 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4046,10 +4046,10 @@ struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, 
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12>
 struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)> {
-  static const int NPARAM = 13 - 1;
+  static const mrb_int NPARAM = 13 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4075,10 +4075,10 @@ struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11
 // void f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13);
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13>
 struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)> {
-  static const int NPARAM = 14;
+  static const mrb_int NPARAM = 14;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4101,10 +4101,10 @@ struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P1
 // R f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13);
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13>
 struct Binder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)> {
-  static const int NPARAM = 14;
+  static const mrb_int NPARAM = 14;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4127,12 +4127,12 @@ struct Binder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)>
 // C* ctor(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13);
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13>
 struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)> {
-  static const int NPARAM = 14;
+  static const mrb_int NPARAM = 14;
   static mrb_value ctor(mrb_state* mrb, mrb_value self) {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4159,10 +4159,10 @@ struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12,
 // class C { void f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13) };
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13>
 struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)> {
-  static const int NPARAM = 14;
+  static const mrb_int NPARAM = 14;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4187,10 +4187,10 @@ struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11,
 // class C { R f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13) };
 template<class C, class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13>
 struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)> {
-  static const int NPARAM = 14;
+  static const mrb_int NPARAM = 14;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4216,10 +4216,10 @@ struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P1
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13>
 struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)> {
-  static const int NPARAM = 14 - 1;
+  static const mrb_int NPARAM = 14 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4243,10 +4243,10 @@ struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13>
 struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)> {
-  static const int NPARAM = 14 - 1;
+  static const mrb_int NPARAM = 14 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4273,10 +4273,10 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11,
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13>
 struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)> {
-  static const int NPARAM = 14 - 1;
+  static const mrb_int NPARAM = 14 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4300,10 +4300,10 @@ struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, 
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13>
 struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)> {
-  static const int NPARAM = 14 - 1;
+  static const mrb_int NPARAM = 14 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4329,10 +4329,10 @@ struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11
 // void f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14);
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14>
 struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)> {
-  static const int NPARAM = 15;
+  static const mrb_int NPARAM = 15;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4355,10 +4355,10 @@ struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P1
 // R f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14);
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14>
 struct Binder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)> {
-  static const int NPARAM = 15;
+  static const mrb_int NPARAM = 15;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4381,12 +4381,12 @@ struct Binder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, 
 // C* ctor(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14);
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14>
 struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)> {
-  static const int NPARAM = 15;
+  static const mrb_int NPARAM = 15;
   static mrb_value ctor(mrb_state* mrb, mrb_value self) {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4413,10 +4413,10 @@ struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12,
 // class C { void f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14) };
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14>
 struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)> {
-  static const int NPARAM = 15;
+  static const mrb_int NPARAM = 15;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4441,10 +4441,10 @@ struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11,
 // class C { R f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14) };
 template<class C, class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14>
 struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)> {
-  static const int NPARAM = 15;
+  static const mrb_int NPARAM = 15;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4470,10 +4470,10 @@ struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P1
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14>
 struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)> {
-  static const int NPARAM = 15 - 1;
+  static const mrb_int NPARAM = 15 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4497,10 +4497,10 @@ struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14>
 struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)> {
-  static const int NPARAM = 15 - 1;
+  static const mrb_int NPARAM = 15 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4527,10 +4527,10 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11,
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14>
 struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)> {
-  static const int NPARAM = 15 - 1;
+  static const mrb_int NPARAM = 15 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4554,10 +4554,10 @@ struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, 
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14>
 struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)> {
-  static const int NPARAM = 15 - 1;
+  static const mrb_int NPARAM = 15 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4583,10 +4583,10 @@ struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11
 // void f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15);
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15>
 struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)> {
-  static const int NPARAM = 16;
+  static const mrb_int NPARAM = 16;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4609,10 +4609,10 @@ struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P1
 // R f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15);
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15>
 struct Binder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)> {
-  static const int NPARAM = 16;
+  static const mrb_int NPARAM = 16;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4635,12 +4635,12 @@ struct Binder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, 
 // C* ctor(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15);
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15>
 struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)> {
-  static const int NPARAM = 16;
+  static const mrb_int NPARAM = 16;
   static mrb_value ctor(mrb_state* mrb, mrb_value self) {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4667,10 +4667,10 @@ struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12,
 // class C { void f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15) };
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15>
 struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)> {
-  static const int NPARAM = 16;
+  static const mrb_int NPARAM = 16;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4695,10 +4695,10 @@ struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11,
 // class C { R f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15) };
 template<class C, class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15>
 struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)> {
-  static const int NPARAM = 16;
+  static const mrb_int NPARAM = 16;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4724,10 +4724,10 @@ struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P1
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15>
 struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)> {
-  static const int NPARAM = 16 - 1;
+  static const mrb_int NPARAM = 16 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4751,10 +4751,10 @@ struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15>
 struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)> {
-  static const int NPARAM = 16 - 1;
+  static const mrb_int NPARAM = 16 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4781,10 +4781,10 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11,
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15>
 struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)> {
-  static const int NPARAM = 16 - 1;
+  static const mrb_int NPARAM = 16 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4808,10 +4808,10 @@ struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, 
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15>
 struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)> {
-  static const int NPARAM = 16 - 1;
+  static const mrb_int NPARAM = 16 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4837,10 +4837,10 @@ struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11
 // void f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16);
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15, class P16>
 struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)> {
-  static const int NPARAM = 17;
+  static const mrb_int NPARAM = 17;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4863,10 +4863,10 @@ struct Binder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P1
 // R f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16);
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15, class P16>
 struct Binder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)> {
-  static const int NPARAM = 17;
+  static const mrb_int NPARAM = 17;
   static mrb_value call(mrb_state* mrb, mrb_value /*self*/) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4889,12 +4889,12 @@ struct Binder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, 
 // C* ctor(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16);
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15, class P16>
 struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)> {
-  static const int NPARAM = 17;
+  static const mrb_int NPARAM = 17;
   static mrb_value ctor(mrb_state* mrb, mrb_value self) {
     DATA_TYPE(self) = &ClassBinder<C>::type_info;
     DATA_PTR(self) = NULL;
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4921,10 +4921,10 @@ struct ClassBinder<C* (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12,
 // class C { void f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16) };
 template<class C, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15, class P16>
 struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)> {
-  static const int NPARAM = 17;
+  static const mrb_int NPARAM = 17;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4949,10 +4949,10 @@ struct ClassBinder<void (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11,
 // class C { R f(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16) };
 template<class C, class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15, class P16>
 struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)> {
-  static const int NPARAM = 17;
+  static const mrb_int NPARAM = 17;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -4978,10 +4978,10 @@ struct ClassBinder<R (C::*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P1
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15, class P16>
 struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)> {
-  static const int NPARAM = 17 - 1;
+  static const mrb_int NPARAM = 17 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -5005,10 +5005,10 @@ struct CustomClassBinder<void (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15, class P16>
 struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)> {
-  static const int NPARAM = 17 - 1;
+  static const mrb_int NPARAM = 17 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -5035,10 +5035,10 @@ struct CustomClassBinder<R (*)(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11,
 // custom method
 template<class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15, class P16>
 struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)> {
-  static const int NPARAM = 17 - 1;
+  static const mrb_int NPARAM = 17 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -5062,10 +5062,10 @@ struct CustomClassBinder<void (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, 
 
 template<class R, class P0, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12, class P13, class P14, class P15, class P16>
 struct CustomClassBinder<R (*)(P0&, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)> {
-  static const int NPARAM = 17 - 1;
+  static const mrb_int NPARAM = 17 - 1;
   static mrb_value call(mrb_state* mrb, mrb_value self) {
     mrb_value* targs;
-    int narg;
+    mrb_int narg;
     mrb_value block = mrb_nil_value();
     std::vector<mrb_value> args;
     mrb_get_args(mrb, "*|&", &targs, &narg, &block);
@@ -5129,11 +5129,17 @@ public:
       mrb_symbol_value(func_name_s),          // 1: function name
     };
     struct RProc* proc = mrb_proc_new_cfunc_with_env(mrb_, Binder<Func>::call, 2, env);
-    mrb_field_write_barrier(mrb_, (RBasic *)proc, (RBasic *)proc->env);
+    mrb_field_write_barrier(mrb_, (RBasic *)proc, (RBasic *)proc->e.env);
     if (mod_ == mrb_->kernel_module)
-      mrb_define_method_raw(mrb_, mod_, func_name_s, proc);
+    {
+      mrb_method_t method;
+	  MRB_METHOD_FROM_PROC(method, proc);
+      mrb_define_method_raw(mrb_, mod_, func_name_s, method);
+    }
     else
+    {
       mrb_define_class_method_raw(mrb_, mod_, func_name_s, proc);
+    }
   }
 
   // Bind class.
